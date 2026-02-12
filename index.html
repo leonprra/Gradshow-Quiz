@@ -4,7 +4,13 @@
   <meta charset="UTF-8">
   
   <!-- CRITICAL: This viewport meta tag is essential for mobile -->
+  <!-- Multiple viewport declarations to maximize compatibility across browsers/webviews -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  
+  <!-- Telegram-specific meta tags -->
+  <meta name="format-detection" content="telephone=no">
+  <meta name="mobile-web-app-capable" content="yes">
   
   <title>What Tool Are You? - Designer Quiz</title>
   
@@ -45,6 +51,47 @@
       -ms-touch-action: none;
     }
   </style>
+  
+  <script>
+    // Force viewport scale for Telegram and other webviews
+    // This runs before p5.js to ensure proper scaling
+    (function() {
+      // Remove any existing viewport tags and re-add with correct settings
+      function setViewport() {
+        var viewports = document.querySelectorAll('meta[name="viewport"]');
+        viewports.forEach(function(vp) { vp.remove(); });
+        
+        var viewport = document.createElement('meta');
+        viewport.name = "viewport";
+        viewport.content = "width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, shrink-to-fit=no";
+        document.head.appendChild(viewport);
+      }
+      
+      // Set on load
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setViewport);
+      } else {
+        setViewport();
+      }
+      
+      // Prevent zoom on double-tap (iOS/Telegram)
+      var lastTouchEnd = 0;
+      document.addEventListener('touchend', function(e) {
+        var now = Date.now();
+        if (now - lastTouchEnd <= 300) {
+          e.preventDefault();
+        }
+        lastTouchEnd = now;
+      }, false);
+      
+      // Force window size update (helps Telegram WebView)
+      window.addEventListener('resize', function() {
+        setTimeout(function() {
+          window.scrollTo(0, 0);
+        }, 100);
+      });
+    })();
+  </script>
 </head>
 <body>
   <!-- Your p5.js sketch will be injected here -->
