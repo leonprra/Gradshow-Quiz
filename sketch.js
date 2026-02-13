@@ -1,10 +1,7 @@
 /*
 Mobile-friendly 6-question quiz (p5.js)
-Screens:
-- Start
-- Quiz
-- Calculating
-- Result
+Optimized for Telegram, iOS, Android
+Screens: Start > Quiz > Calculating > Result
 */
 
 let bg;
@@ -34,38 +31,22 @@ let RESULT_IMAGES = {};
 let currentIdx = 0;
 let scoringBits = [];
 let locked = false;
-
-// Optional images
-let startImage; // hero image on start screen
+let selectedChoice = null; // Track which choice is selected (0 or 1)
 
 function preload() {
   QIMG.start = loadImage("start.png");
 
   // --- Question media placeholders ---
   QIMG.q1 = loadImage("q1.png");
-  // QIMG["q2"] = loadImage("q2.png");
-  // QIMG["q3"] = loadImage("q3.png");
-  // QIMG["q4"] = loadImage("q4.png");
-  // QIMG["q5"] = loadImage("q5.png");
-  // QIMG["q6"] = loadImage("q6.png");
+  // QIMG.q2 = loadImage("q2.png");
+  // QIMG.q3 = loadImage("q3.png");
+  // QIMG.q4 = loadImage("q4.png");
+  // QIMG.q5 = loadImage("q5.png");
+  // QIMG.q6 = loadImage("q6.png");
 
   // --- Result images placeholders (16 variations) ---
   // RESULT_IMAGES["AAAA"] = loadImage("results/AAAA.png");
-  // RESULT_IMAGES["AAAB"] = loadImage("results/AAAB.png");
-  // RESULT_IMAGES["AABA"] = loadImage("results/AABA.png");
-  // RESULT_IMAGES["AABB"] = loadImage("results/AABB.png");
-  // RESULT_IMAGES["ABAA"] = loadImage("results/ABAA.png");
-  // RESULT_IMAGES["ABAB"] = loadImage("results/ABAB.png");
-  // RESULT_IMAGES["ABBA"] = loadImage("results/ABBA.png");
-  // RESULT_IMAGES["ABBB"] = loadImage("results/ABBB.png");
-  // RESULT_IMAGES["BAAA"] = loadImage("results/BAAA.png");
-  // RESULT_IMAGES["BAAB"] = loadImage("results/BAAB.png");
-  // RESULT_IMAGES["BABA"] = loadImage("results/BABA.png");
-  // RESULT_IMAGES["BABB"] = loadImage("results/BABB.png");
-  // RESULT_IMAGES["BBAA"] = loadImage("results/BBAA.png");
-  // RESULT_IMAGES["BBAB"] = loadImage("results/BBAB.png");
-  // RESULT_IMAGES["BBBA"] = loadImage("results/BBBA.png");
-  // RESULT_IMAGES["BBBB"] = loadImage("results/BBBB.png");
+  // ... etc
 }
 
 function setup() {
@@ -74,8 +55,14 @@ function setup() {
   // IMPORTANT: keep a reference to the p5 canvas element
   const c = createCanvas(windowWidth, windowHeight);
 
+  // Force fullscreen for Telegram and other webviews
+  // Telegram's WebView sometimes reports wrong window dimensions
+  setTimeout(() => {
+    resizeCanvas(window.innerWidth, window.innerHeight);
+  }, 100);
+
   // -----------------------------
-  // iOS Safari touch fixes
+  // iOS Safari + Telegram touch fixes
   // -----------------------------
   // 1) Disable browser touch gestures (scroll/zoom) on the canvas
   c.elt.style.touchAction = "none";
@@ -107,7 +94,7 @@ function setup() {
     {
       id: "q1",
       type: "padding",
-      prompt: "You wake up in the morning and there’s still an hour left till your alarm rings, what do you do?",
+      prompt: "You wake up in the morning and there's still an hour left till your alarm rings, what do you do?",
       imgId: "q1",
       choices: ["Sleep in lah, rest is best", "Rise and grind, lets get this bread!"]
     },
@@ -116,7 +103,7 @@ function setup() {
       type: "padding",
       prompt: "Time to get dressed, what do you wear!",
       imgId: "q2",
-      choices: ["Today ima take it chill, baggy fit with slippers", "I’m dressing to impress, looking my best!"]
+      choices: ["Today ima take it chill, baggy fit with slippers", "I'm dressing to impress, looking my best!"]
     },
     {
       id: "q3",
@@ -142,7 +129,7 @@ function setup() {
     {
       id: "q6",
       type: "scoring",
-      prompt: "The deadline is near. It works, but it’s not perfect.",
+      prompt: "The deadline is near. It works, but it's not perfect.",
       imgId: "q6",
       choices: ["Send it. Version two can be better", "Keep tweaking till the last minute"]
     },
@@ -237,8 +224,6 @@ function drawCalculatingScreen() {
 
   if (millis() - time <= wait) {
     text(calc[idx], width / 2, height / 2);
-  } else if (millis() - time >= wait) {
-    // no-op
   }
 
   const btnY = height - pad - btnH;
@@ -283,9 +268,10 @@ function drawResultScreen() {
 
 function mousePressed() {
   handleTap(mouseX, mouseY);
+  return false;
 }
 
-// iOS fix: use touches[0] when available (more reliable than touchX/touchY)
+// iOS + Telegram fix: use touches[0] when available
 function touchStarted() {
   const t = (touches && touches.length) ? touches[0] : null;
   const px = t ? t.x : mouseX;
@@ -309,7 +295,9 @@ function handleTap(px, py) {
 
   if (appState === "calculating") {
     const btnY = height - pad - btnH;
-    if (hit(px, py, cx, btnY, cw, btnH)) appState = "result";
+    if (millis() - time >= wait && hit(px, py, cx, btnY, cw, btnH)) {
+      appState = "result";
+    }
     return;
   }
 
@@ -322,12 +310,36 @@ function handleTap(px, py) {
     return;
   }
 
-  // Quiz answers
-  const btnY1 = height - pad - btnH * 2 - btnGap;
-  const btnY2 = height - pad - btnH;
+  // Quiz screen - handle choice selection and confirmation
+  if (appState === "quiz") {
+    const btnY1 = height - pad - btnH * 3 - btnGap * 2;
+    const btnY2 = height - pad - btnH * 2 - btnGap;
+    const confirmY = height - pad - btnH;
+    
+    // Confirm button dimensions (must match drawConfirmButton)
+    const confirmBtnWidth = 200;
+    const confirmX = cx + (cw - confirmBtnWidth) / 2;
 
-  if (hit(px, py, cx, btnY1, cw, btnH)) answerQuestion(0);
-  else if (hit(px, py, cx, btnY2, cw, btnH)) answerQuestion(1);
+    // Check if tapping choice 1
+    if (hit(px, py, cx, btnY1, cw, btnH)) {
+      selectedChoice = 0;
+      return;
+    }
+    
+    // Check if tapping choice 2
+    if (hit(px, py, cx, btnY2, cw, btnH)) {
+      selectedChoice = 1;
+      return;
+    }
+    
+    // Check if tapping confirm button (using centered narrower dimensions)
+    if (hit(px, py, confirmX, confirmY, confirmBtnWidth, btnH)) {
+      if (selectedChoice !== null) {
+        answerQuestion(selectedChoice);
+      }
+      return;
+    }
+  }
 }
 
 function answerQuestion(choice) {
@@ -336,6 +348,7 @@ function answerQuestion(choice) {
   if (q.type === "scoring") scoringBits.push(choice);
   setTimeout(() => {
     currentIdx++;
+    selectedChoice = null; // Reset selection for next question
     locked = false;
   }, 120);
 }
@@ -343,6 +356,7 @@ function answerQuestion(choice) {
 function restartQuiz() {
   currentIdx = 0;
   scoringBits = [];
+  selectedChoice = null;
   appState = "start";
 }
 
@@ -352,15 +366,32 @@ function shareResult() {
   const key = getResultKey();
   const text = `I got ${key} on the Designer Quiz!`;
 
-  if (navigator.share) {
+  // Telegram has its own share mechanism
+  if (window.Telegram && window.Telegram.WebApp) {
+    // Use Telegram's native share if available
+    window.Telegram.WebApp.shareLink(window.location.href, text);
+  } else if (navigator.share) {
     navigator.share({
       title: "Designer Quiz",
       text: text,
       url: window.location.href
+    }).catch(() => {
+      // Fallback if cancelled
+      copyToClipboard(text);
     });
   } else {
-    navigator.clipboard.writeText(text + " " + window.location.href);
-    alert("Result copied to clipboard!");
+    copyToClipboard(text);
+  }
+}
+
+function copyToClipboard(text) {
+  const fullText = text + " " + window.location.href;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(fullText)
+      .then(() => alert("Result copied to clipboard!"))
+      .catch(() => alert(fullText));
+  } else {
+    alert(fullText);
   }
 }
 
@@ -389,24 +420,42 @@ function drawQuestionScreen(q) {
   textWrap(WORD);
   text(q.prompt, cx, imgTop + imgH + 30, cw);
 
-  const btnY1 = height - pad - btnH * 2 - btnGap;
-  const btnY2 = height - pad - btnH;
-
-  drawButton(cx, btnY1, cw, btnH, q.choices[0], isTouching(cx, btnY1, cw, btnH));
-  drawButton(cx, btnY2, cw, btnH, q.choices[1], isTouching(cx, btnY2, cw, btnH));
+  // Two choice buttons
+  const btnY1 = height - pad - btnH * 3 - btnGap * 2;
+  const btnY2 = height - pad - btnH * 2 - btnGap;
+  
+  // Draw choice buttons with selected state
+  const isSelected0 = selectedChoice === 0;
+  const isSelected1 = selectedChoice === 1;
+  
+  drawChoiceButton(cx, btnY1, cw, btnH, q.choices[0], 
+    isTouching(cx, btnY1, cw, btnH), isSelected0);
+  drawChoiceButton(cx, btnY2, cw, btnH, q.choices[1], 
+    isTouching(cx, btnY2, cw, btnH), isSelected1);
+  
+  // Confirm button at the bottom (different style)
+  const confirmY = height - pad - btnH;
+  const canConfirm = selectedChoice !== null;
+  
+  // Confirm button dimensions (must match drawConfirmButton)
+  const confirmBtnWidth = 200;
+  const confirmX = cx + (cw - confirmBtnWidth) / 2;
+  
+  drawConfirmButton(confirmX, confirmY, confirmBtnWidth, btnH, "Confirm", 
+    isTouching(confirmX, confirmY, confirmBtnWidth, btnH), canConfirm);
 }
 
 function drawMediaFrame(imgId, x, y, w, h) {
   noFill();
   noStroke();
-  rect(x, y, w, h);
 
   const media = QIMG[imgId];
   if (!media) {
     noStroke();
     fill(245);
-    rect(x, y, w, h);
+    rect(x, y, w, h, 8);
     fill(140);
+    textSize(14);
     text("Image placeholder", x + w / 2, y + h / 2);
     return;
   }
@@ -418,10 +467,55 @@ function drawMediaFrame(imgId, x, y, w, h) {
 function drawButton(x, y, w, h, label, hot) {
   fill(hot ? "#DABBFF" : "#EEE0FF");
   noStroke();
-  rect(x, y, w, h, 18);
+  rect(x+44, y, w-88, h, 18);
+  
   fill(hot ? 250 : 20);
   textSize(hot ? 17 : 16);
   text(label, x + w / 2, y + h / 2);
+}
+
+function drawChoiceButton(x, y, w, h, label, hot, isSelected) {
+  // Selected state: darker purple fill, white text
+  // Unselected state: light purple fill, dark text
+  if (isSelected) {
+    fill("#AE87E7"); // Selected: bold purple
+    noStroke();
+    rect(x+22, y, w-44, h, 10);
+  } else {
+    fill(hot ? "#DABBFF" : "#EEE0FF"); // Hover or normal state
+    stroke("#AE87E7");
+    rect(x+20, y, w-40, h, 10);
+  }
+  
+  
+  
+  // Text color based on selection
+  noStroke();
+  fill(isSelected ? 255 : (hot ? 250 : 20));
+  textSize(isSelected ? 17 : (hot ? 17 : 16));
+  text(label, x + w / 2, y + h / 2);
+}
+
+function drawConfirmButton(x, y, w, h, label, hot, enabled) {
+  // Make button narrower - hug the text more
+  const confirmBtnWidth = 150; // Fixed narrower width
+  const confirmX = width/2; // Center it
+  
+  // Different shape and color for confirm button
+  if (enabled) {
+    fill(hot ? "#FFC107" : "#7a00db"); // Purple when enabled
+  } else {
+    fill("#EAEAEA"); // Gray when disabled
+  }
+  
+  noStroke();
+  ellipse(confirmX, y+h/2, confirmBtnWidth, h); 
+  
+  fill(enabled ? 255 : 150);
+  textSize(17);
+  textStyle(BOLD);
+  text(label, confirmX, y + h / 2);
+  textStyle(NORMAL);
 }
 
 function contentWidth() {
@@ -442,9 +536,18 @@ function isTouching(x, y, w, h) {
 
 function fitRect(sw, sh, dw, dh) {
   const s = min(dw / sw, dh / sh);
-  return { w: sw * s, h: sh * s, x: (dw - sw * s) / 2, y: (dh - sh * s) / 2 };
+  return { 
+    w: sw * s, 
+    h: sh * s, 
+    x: (dw - sw * s) / 2, 
+    y: (dh - sh * s) / 2 
+  };
 }
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
+  // Force scroll to top after resize (helps with Telegram)
+  setTimeout(() => {
+    window.scrollTo(0, 0);
+  }, 100);
 }
