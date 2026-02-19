@@ -7,8 +7,10 @@ Screens: Start > Quiz > Calculating > Result
 let bg;
 var time;
 var wait = 6000;
+var preparingWait = 5000;
 
 let calc = ["Aligning grids.", "Brewing coffee.","Re-exporting again.","Trusting the process.","Reducing visual noise.","Asking for quick feedback."];
+let preparing = ["Sharpening pencils...","Going to Artfriend...", "Searching Pinterest...", "Setting the mood...", "Preparing your journey..."];
 let idx = 0;
 let lastSwap = 0;
 let swapMs = 1200;
@@ -21,7 +23,7 @@ let btnH = 56;
 let btnGap = 14;
 
 // App state
-let appState = "start"; // "start" | "quiz" | "calculating" | "result"
+let appState = "start"; // "start" | "preparing" | "quiz" | "calculating" | "result"
 
 // Data
 let QUESTIONS = [];
@@ -156,6 +158,7 @@ function draw() {
   }
 
   if (appState === "start") drawStartScreen();
+  else if (appState === "preparing") drawPreparingScreen();
   else if (appState === "quiz") drawQuiz();
   else if (appState === "calculating") drawCalculatingScreen();
   else if (appState === "result") drawResultScreen();
@@ -192,6 +195,36 @@ function drawStartScreen() {
   // Start button
   const btnY = height - pad - btnH;
   drawButton(cx, btnY, cw, btnH, "Start Quiz", isTouching(cx, btnY, cw, btnH));
+}
+
+function drawPreparingScreen() {
+  const cw = contentWidth();
+  const cx = contentX();
+
+  textSize(22);
+  fill(20);
+  if (millis() - time >= preparingWait) {
+    text("Let's go!", width / 2, height / 2 - 40);
+  } else {
+    text("Preparing your quiz...", width / 2, height / 2 - 40);
+  }
+
+  textSize(14);
+  fill(120);
+  if (millis() - lastSwap > swapMs) {
+    idx = (idx + 1) % preparing.length;
+    lastSwap = millis();
+  }
+
+  if (millis() - time <= preparingWait) {
+    text(preparing[idx], width / 2, height / 2);
+  }
+
+  // Auto-advance to quiz after wait time
+  if (millis() - time >= preparingWait) {
+    appState = "quiz";
+    time = millis(); // Reset time for quiz
+  }
 }
 
 function drawQuiz() {
@@ -289,7 +322,11 @@ function handleTap(px, py) {
 
   if (appState === "start") {
     const btnY = height - pad - btnH;
-    if (hit(px, py, cx, btnY, cw, btnH)) appState = "quiz";
+    if (hit(px, py, cx, btnY, cw, btnH)) {
+      appState = "preparing";
+      time = millis(); // Start preparing timer
+      idx = 0; // Reset animation index
+    }
     return;
   }
 
@@ -317,7 +354,7 @@ function handleTap(px, py) {
     const confirmY = height - pad - btnH;
     
     // Confirm button dimensions (must match drawConfirmButton)
-    const confirmBtnWidth = 200;
+    const confirmBtnWidth = 140;
     const confirmX = cx + (cw - confirmBtnWidth) / 2;
 
     // Check if tapping choice 1
