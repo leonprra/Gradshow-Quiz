@@ -148,8 +148,8 @@ function draw() {
 
   for (let row = 0; row < 40; row++) {
     for (let col = 0; col < 80; col++) {
-      const px = col * 60;
-      const py = row * 60;
+      const px = col * 24;
+      const py = row * 24;
       fill("lightgrey");
       circle(px, py, 2);
     }
@@ -447,8 +447,7 @@ function drawQuestionScreen(q) {
 
 function drawMediaFrame(imgId, x, y, w, h) {
   noFill();
-  strokeWeight(2);
-  stroke("lightgrey");
+  noStroke();
 
   const media = QIMG[imgId];
   if (!media) {
