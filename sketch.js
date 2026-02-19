@@ -148,10 +148,10 @@ function draw() {
 
   for (let row = 0; row < 40; row++) {
     for (let col = 0; col < 80; col++) {
-      const px = col * 40;
-      const py = row * 40;
+      const px = col * 60;
+      const py = row * 60;
       fill("lightgrey");
-      circle(px, py, 3);
+      circle(px, py, 2);
     }
   }
 
@@ -447,7 +447,8 @@ function drawQuestionScreen(q) {
 
 function drawMediaFrame(imgId, x, y, w, h) {
   noFill();
-  noStroke();
+  strokeWeight(2);
+  stroke("lightgrey");
 
   const media = QIMG[imgId];
   if (!media) {
@@ -484,6 +485,7 @@ function drawChoiceButton(x, y, w, h, label, hot, isSelected) {
   } else {
     fill(hot ? "#DABBFF" : "#EEE0FF"); // Hover or normal state
     stroke("#AE87E7");
+    strokeWeight(2); 
     rect(x+20, y, w-40, h, 10);
   }
   
