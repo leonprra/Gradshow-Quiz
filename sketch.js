@@ -169,7 +169,7 @@ function drawStartScreen() {
 
   textSize(28);
   push();
-  textFont("Helvetica");
+  textFont("Courier New");
   textStyle(BOLD);
   fill("#7a00db");
   text("WHAT TOOL ARE YOU?", width / 2, pad + 60);
@@ -364,7 +364,7 @@ function restartQuiz() {
 
 function shareResult() {
   const key = getResultKey();
-  const text = `I got ${key} on the Designer Quiz!`;
+  const text = `I am a ${key}, from this Gradshow 2026 Quiz!`;
 
   // Telegram has its own share mechanism
   if (window.Telegram && window.Telegram.WebApp) {
@@ -372,7 +372,7 @@ function shareResult() {
     window.Telegram.WebApp.shareLink(window.location.href, text);
   } else if (navigator.share) {
     navigator.share({
-      title: "Designer Quiz",
+      title: "What Tool Are You!",
       text: text,
       url: window.location.href
     }).catch(() => {
