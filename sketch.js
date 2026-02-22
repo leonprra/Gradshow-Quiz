@@ -107,7 +107,7 @@ function setup() {
       type: "padding",
       prompt: "Time to get dressed, what do you wear!",
       imgId: "q2",
-      choices: ["Today ima take it chill, baggy fit with slippers", "I'm dressing to impress, looking my best!"]
+      choices: ["Take it chill, I'll wear whats on the chair", "I'm dressing to impress, looking my best!"]
     },
     {
       id: "q3",
@@ -121,7 +121,7 @@ function setup() {
       type: "scoring",
       prompt: "You finally arrived at your workspace. Your desk situation is… questionable.",
       imgId: "q4",
-      choices: ["I’ll just carve out a small working area in the pile of mess.", "No way. I need to reset the whole area before doing anything"]
+      choices: ["Carve out a small area in the mess.", "Reset the whole table before anything else"]
     },
     {
       id: "q5",
@@ -133,7 +133,7 @@ function setup() {
     {
       id: "q6",
       type: "scoring",
-      prompt: "The deadline is near. It works, but it's not perfect.",
+      prompt: "The deadline is coming up! You're done, but it's not perfect.",
       imgId: "q6",
       choices: ["Send it. Version two can be better", "Keep tweaking till the last minute"]
     },
@@ -142,7 +142,7 @@ function setup() {
       type: "padding",
       prompt: "You have a 15-minute break after an intense session.",
       imgId: "q7",
-      choices: ["Go for a walk with friends", "Reset alone in a calm space"]
+      choices: ["Let's all go for a walk and a snack!", "Lemme reset my brain in a calm space"]
     }
   ];
 }
@@ -532,7 +532,7 @@ function drawChoiceButton(x, y, w, h, label, hot, isSelected) {
   // Text color based on selection
   noStroke();
   fill(isSelected ? 255 : (hot ? 250 : 20));
-  textSize(isSelected ? 17 : (hot ? 17 : 16));
+  textSize(isSelected ? 15 : (hot ? 16 : 15));
   text(label, x + w / 2, y + h / 2);
 }
 
