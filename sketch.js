@@ -40,11 +40,13 @@ function preload() {
 
   // --- Question media placeholders ---
   QIMG.q1 = loadImage("q1.png");
-  // QIMG.q2 = loadImage("q2.png");
-  // QIMG.q3 = loadImage("q3.png");
-  // QIMG.q4 = loadImage("q4.png");
-  // QIMG.q5 = loadImage("q5.png");
-  // QIMG.q6 = loadImage("q6.png");
+  QIMG.q2 = loadImage("q2.png");
+  QIMG.q3 = loadImage("q3.png");
+  QIMG.q4 = loadImage("q4.png");
+  QIMG.q5 = loadImage("q5.png");
+  QIMG.q6 = loadImage("q6.png");
+  //  QIMG.q7 = loadImage("q7.png");
+
 
   // --- Result images placeholders (16 variations) ---
   // RESULT_IMAGES["AAAA"] = loadImage("results/AAAA.png");
@@ -117,16 +119,16 @@ function setup() {
     {
       id: "q4",
       type: "scoring",
-      prompt: "A junior is struggling to make a poster with a certain effect.",
+      prompt: "You finally arrived at your workspace. Your desk situation is… questionable.",
       imgId: "q4",
-      choices: ["Sit with them and guide step by step", "Rally designers and brainstorm"]
+      choices: ["I’ll just carve out a small working area in the pile of mess.", "No way. I need to reset the whole area before doing anything"]
     },
     {
       id: "q5",
       type: "scoring",
-      prompt: "You finally reach your workspace. The table setup is… questionable.",
+      prompt: "Your deskmate has been staring at their screen for the past 10 minutes… same tab, same sigh, zero progress.",
       imgId: "q5",
-      choices: ["Carve out a small work area", "Reset the whole table"]
+      choices: ["Roll my chair over, “What’s not working?”", "Roll my chair over, “Coffee break!!”"]
     },
     {
       id: "q6",
