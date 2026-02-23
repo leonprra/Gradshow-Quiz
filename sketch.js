@@ -454,11 +454,11 @@ function drawQuestionScreen(q) {
   fill("#4a00a2");
   textSize(18);
   textWrap(WORD);
-  text(q.prompt, cx, pad + 50, cw);
+  text(q.prompt, cx, pad + 70, cw);
 
 // Draw image SECOND (below prompt)
   const imgTop = pad + 150;
-  const imgH = height * 0.35;
+  const imgH = height * 0.50;
   drawMediaFrame(q.imgId, cx, imgTop, cw, imgH);
 
   // Two choice buttons
