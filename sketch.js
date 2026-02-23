@@ -450,14 +450,16 @@ function drawQuestionScreen(q) {
   fill(20);
   text(`Q ${currentIdx + 1} / ${QUESTIONS.length}`, width / 2, pad + 12);
 
-  const imgTop = pad + 42;
-  const imgH = height * 0.45;
-  drawMediaFrame(q.imgId, cx, imgTop, cw, imgH);
-
-  fill("#7a00db");
+  // Draw prompt FIRST (above image)
+  fill("#4a00a2");
   textSize(18);
   textWrap(WORD);
-  text(q.prompt, cx, imgTop + imgH + 30, cw);
+  text(q.prompt, cx, pad + 50, cw);
+
+// Draw image SECOND (below prompt)
+  const imgTop = pad + 150;
+  const imgH = height * 0.35;
+  drawMediaFrame(q.imgId, cx, imgTop, cw, imgH);
 
   // Two choice buttons
   const btnY1 = height - pad - btnH * 3 - btnGap * 2;
