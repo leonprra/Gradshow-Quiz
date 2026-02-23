@@ -128,7 +128,7 @@ function setup() {
       type: "scoring",
       prompt: "Your deskmate has been staring at their screen for the past 10 minutes… same tab, same sigh, zero progress.",
       imgId: "q5",
-      choices: ["Roll my chair over, “What’s not working?”", "Roll my chair over, “Coffee break!!”"]
+      choices: ["Roll my chair over, "What's not working?"", "Roll my chair over, "Coffee break!!""]
     },
     {
       id: "q6",
@@ -446,18 +446,22 @@ function drawQuestionScreen(q) {
   const cw = contentWidth();
   const cx = contentX();
 
+  // Question number at top
   textSize(15);
   fill(20);
   text(`Q ${currentIdx + 1} / ${QUESTIONS.length}`, width / 2, pad + 12);
 
-  const imgTop = pad + 42;
-  const imgH = height * 0.45;
-  drawMediaFrame(q.imgId, cx, imgTop, cw, imgH);
-
+  // Question prompt ABOVE the image (just below question number)
   fill("#7a00db");
   textSize(18);
   textWrap(WORD);
-  text(q.prompt, cx, imgTop + imgH + 30, cw);
+  const promptY = pad + 50;
+  text(q.prompt, cx, promptY, cw);
+
+  // Image below the prompt
+  const imgTop = pad + 150; // Increased spacing to fit prompt above
+  const imgH = height * 0.35;
+  drawMediaFrame(q.imgId, cx, imgTop, cw, imgH);
 
   // Two choice buttons
   const btnY1 = height - pad - btnH * 3 - btnGap * 2;
