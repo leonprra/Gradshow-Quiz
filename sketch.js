@@ -457,7 +457,7 @@ function drawQuestionScreen(q) {
   text(q.prompt, cx, pad + 70, cw);
 
 // Draw image SECOND (below prompt)
-  const imgTop = pad + 150;
+  const imgTop = pad + 120;
   const imgH = height * 0.50;
   drawMediaFrame(q.imgId, cx, imgTop, cw, imgH);
 
