@@ -516,16 +516,16 @@ function drawButton(x, y, w, h, label, hot) {
 }
 
 function drawChoiceButton(x, y, w, h, label, hot, isSelected) {
-  // Selected state: darker purple fill, white text
-  // Unselected state: light purple fill, dark text
+  // unselected state: darker purple fill, white text
+  // selected state: light purple fill, dark text
   if (isSelected) {
-    fill("#AE87E7"); // Selected: bold purple
-    noStroke();
-    rect(x+22, y, w-44, h, 10);
-  } else {
-    fill(hot ? "#DABBFF" : "#EEE0FF"); // Hover or normal state
+    fill("#DABBFF"); // Selected: bold purple
     stroke("#AE87E7");
     strokeWeight(2); 
+    rect(x+22, y, w-44, h, 10);
+  } else {
+    fill(hot ? "#DABBFF" : "#AE87E7"); // Hover or normal state
+    noStroke();
     rect(x+20, y, w-40, h, 10);
   }
   
@@ -533,7 +533,7 @@ function drawChoiceButton(x, y, w, h, label, hot, isSelected) {
   
   // Text color based on selection
   noStroke();
-  fill(isSelected ? 255 : (hot ? 250 : 20));
+  fill(isSelected ? "#AE87E7" : (hot ? "#F7EFFF" : 250));
   textSize(isSelected ? 15 : (hot ? 16 : 15));
   text(label, x + w / 2, y + h / 2);
 }
