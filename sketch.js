@@ -179,7 +179,7 @@ const imgH = height * 0.15;
 drawMediaFrame("start", cx, imgTop, cw, 1.5 * imgH);
 
 // Start text after image
-let currentY = imgTop + (1.5 * imgH) + 20; // 20px gap after image
+let currentY = imgTop + (1.5 * imgH) + 70; // 70px gap after image
 
 push();
 textAlign(LEFT);
