@@ -202,7 +202,7 @@ fill(50);
 let txt2 = "It's different people, different strengths, different ways of working.";
 text(txt2, cx, currentY, cw);
 let lines2 = calculateLines(txt2, cw, 16);
-currentY += (16 * lineHeight * lines2) + 15;
+currentY += (16 * lineHeight * lines2) + 30;
 
 // Third paragraph
 let txt3 = "Some people plan. Some people improvise. Some perfect. Some bring the vibes. Before you head down to the DID Graduation Show, let's find out… ";
