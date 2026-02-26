@@ -172,26 +172,37 @@ function drawStartScreen() {
   const cw = contentWidth();
   const cx = contentX();
 
-  textSize(28);
   push();
-  textFont("Courier New");
+  textAlign(LEFT);
+  textSize(18);
+  textFont("Helvetica");
   textStyle(BOLD);
   fill("#7a00db");
-  text("WHAT TOOL ARE YOU?", width / 2, pad + 60);
-  pop();
+  text("Every design gradshow is more than just final pieces on display.",cx, pad + 160,cw);
 
   textSize(16);
   fill(50);
-  text(
-    "A day-in-the-life quiz for Design students.",
+  text(" It’s different people, different strengths, different ways of working.",
     cx,
-    pad + 120,
+    pad + 200,
+    cw);
+
+  text("Some people plan. Some people improvise. Some perfect. Some bring the vibes. Before you head down to the DID Graduation Show, let’s find out… ",
+    cx,
+    pad + 240,
+    cw);
+
+  text("What’s your tool type?",
+    cx,
+    pad + 280,
     cw
   );
+    pop();
+
 
   // Image
-  const imgTop = pad + 170;
-  const imgH = height * 0.35;
+  const imgTop = pad + 20;
+  const imgH = height * 0.15;
   drawMediaFrame("start", cx, imgTop, cw, 1.5 * imgH);
 
   // Start button
