@@ -175,7 +175,7 @@ const cx = contentX();
 // Image at top
 const imgTop = pad + 20;
 const imgH = height * 0.15;
-drawMediaFrame("start", cx, imgTop, cw, 1.5 * imgH);
+drawMediaFrame("start", cx, imgTop, cw, 0.5 * imgH);
 
 // Start text after image
 let currentY = imgTop + (1.5 * imgH) + 20; // 20px gap after image
