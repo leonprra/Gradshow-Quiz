@@ -169,42 +169,44 @@ function draw() {
 /* ---------------- SCREENS ---------------- */
 
 function drawStartScreen() {
-  const cw = contentWidth();
-  const cx = contentX();
+ const cw = contentWidth();
+const cx = contentX();
 
-  push();
-  textAlign(LEFT);
-  textSize(18);
-  textFont("Helvetica");
-  textStyle(BOLD);
-  fill("#7a00db");
-  text("Every design gradshow is more than just final pieces on display.",cx, pad + 160,cw);
+// Image at top
+const imgTop = pad + 20;
+const imgH = height * 0.15;
+  
+drawMediaFrame("start", cx, imgTop, cw, 1.5 * imgH);
 
-  textSize(16);
-  fill(50);
-  text(" It’s different people, different strengths, different ways of working.",
-    cx,
-    pad + 200,
-    cw);
+// Start text after image
+let currentY = imgTop + (1.5 * imgH) + 20; // 20px gap after image
 
-  text("Some people plan. Some people improvise. Some perfect. Some bring the vibes. Before you head down to the DID Graduation Show, let’s find out… ",
-    cx,
-    pad + 240,
-    cw);
+push();
+textAlign(LEFT);
 
-  text("What’s your tool type?",
-    cx,
-    pad + 280,
-    cw
-  );
-    pop();
+// First paragraph
+textSize(18);
+textFont("Helvetica");
+textStyle(BOLD);
+fill("#7a00db");
+text("Every design gradshow is more than just final pieces on display.", cx, currentY, cw);
+currentY += 50; // Add spacing after this text
 
+// Second paragraph
+textSize(16);
+textStyle(NORMAL);
+fill(50);
+text("It's different people, different strengths, different ways of working.", cx, currentY, cw);
+currentY += 50; // Add spacing
 
-  // Image
-  const imgTop = pad + 20;
-  const imgH = height * 0.15;
-  drawMediaFrame("start", cx, imgTop, cw, 1.5 * imgH);
+// Third paragraph
+text("Some people plan. Some people improvise. Some perfect. Some bring the vibes. Before you head down to the DID Graduation Show, let's find out… ", cx, currentY, cw);
+currentY += 90; // More spacing for longer text
 
+// Fourth paragraph
+text("What's your tool type?", cx, currentY, cw);
+
+pop();
   // Start button
   const btnY = height - pad - btnH;
   drawButton(cx, btnY, cw, btnH, "Start Quiz", isTouching(cx, btnY, cw, btnH));
