@@ -169,17 +169,17 @@ function draw() {
 /* ---------------- SCREENS ---------------- */
 
 function drawStartScreen() {
- const cw = contentWidth();
+const cw = contentWidth();
 const cx = contentX();
 
 // Image at top
 const imgTop = pad + 20;
 const imgH = height * 0.15;
-  
 drawMediaFrame("start", cx, imgTop, cw, 1.5 * imgH);
 
 // Start text after image
-let currentY = imgTop + (1.5 * imgH) + 70; // 70px gap after image
+let currentY = imgTop + (1.5 * imgH) + 20; // 20px gap after image
+const lineHeight = 1.5; // Line spacing multiplier
 
 push();
 textAlign(LEFT);
@@ -189,24 +189,54 @@ textSize(18);
 textFont("Helvetica");
 textStyle(BOLD);
 fill("#7a00db");
-text("Every design gradshow is more than just final pieces on display.", cx, currentY, cw);
-currentY += 50; // Add spacing after this text
+let txt1 = "Every design gradshow is more than just final pieces on display.";
+text(txt1, cx, currentY, cw);
+// Calculate height: font size × line height × number of lines
+let lines1 = calculateLines(txt1, cw, 18);
+currentY += (18 * lineHeight * lines1) + 15; // text height + gap
 
 // Second paragraph
 textSize(16);
 textStyle(NORMAL);
 fill(50);
-text("It's different people, different strengths, different ways of working.", cx, currentY, cw);
-currentY += 50; // Add spacing
+let txt2 = "It's different people, different strengths, different ways of working.";
+text(txt2, cx, currentY, cw);
+let lines2 = calculateLines(txt2, cw, 16);
+currentY += (16 * lineHeight * lines2) + 15;
 
 // Third paragraph
-text("Some people plan. Some people improvise. Some perfect. Some bring the vibes. Before you head down to the DID Graduation Show, let's find out… ", cx, currentY, cw);
-currentY += 90; // More spacing for longer text
+let txt3 = "Some people plan. Some people improvise. Some perfect. Some bring the vibes. Before you head down to the DID Graduation Show, let's find out… ";
+text(txt3, cx, currentY, cw);
+let lines3 = calculateLines(txt3, cw, 16);
+currentY += (16 * lineHeight * lines3) + 15;
 
 // Fourth paragraph
-text("What's your tool type?", cx, currentY, cw);
+let txt4 = "What's your tool type?";
+text(txt4, cx, currentY, cw);
 
 pop();
+
+// Helper function to estimate number of lines
+function calculateLines(txt, maxWidth, fontSize) {
+  textSize(fontSize);
+  let words = txt.split(' ');
+  let line = '';
+  let lineCount = 1;
+  
+  for (let i = 0; i < words.length; i++) {
+    let testLine = line + words[i] + ' ';
+    let testWidth = textWidth(testLine);
+    
+    if (testWidth > maxWidth && i > 0) {
+      line = words[i] + ' ';
+      lineCount++;
+    } else {
+      line = testLine;
+    }
+  }
+  
+  return lineCount;
+}
   // Start button
   const btnY = height - pad - btnH;
   drawButton(cx, btnY, cw, btnH, "Start Quiz", isTouching(cx, btnY, cw, btnH));
