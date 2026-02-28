@@ -2,7 +2,6 @@
 Mobile-friendly 6-question quiz (p5.js)
 Optimized for Telegram, iOS, Android
 Screens: Start > Quiz > Calculating > Result
-WITH SLIDE ANIMATIONS
 */
 
 let bg;
@@ -35,10 +34,6 @@ let currentIdx = 0;
 let scoringBits = [];
 let locked = false;
 let selectedChoice = null; // Track which choice is selected (0 or 1)
-
-// Animation variables
-let isAnimating = false;
-let fadeAlpha = 255; // 255 = fully visible, 0 = invisible
 
 function preload() {
   QIMG.start = loadImage("start.png");
@@ -134,7 +129,7 @@ function setup() {
       type: "scoring",
       prompt: "Your deskmate has been staring at their screen for the past 10 minutes… same tab, same sigh, zero progress.",
       imgId: "q5",
-      choices: ["Roll my chair over, "What's not working?"", "Roll my chair over, "Coffee break!!""]
+      choices: ["Roll my chair over, “What’s not working?”", "Roll my chair over, “Coffee break!!”"]
     },
     {
       id: "q6",
@@ -162,15 +157,6 @@ function draw() {
       const py = row * 24;
       fill("lightgrey");
       circle(px, py, 2);
-    }
-  }
-
-  // Update fade animation
-  if (isAnimating) {
-    fadeAlpha += 15; // Fade in speed
-    if (fadeAlpha >= 255) {
-      fadeAlpha = 255;
-      isAnimating = false;
     }
   }
 
@@ -374,7 +360,7 @@ function touchStarted() {
 }
 
 function handleTap(px, py) {
-  if (locked || isAnimating) return; // Don't allow taps during animation
+  if (locked) return;
 
   const cw = contentWidth();
   const cx = contentX();
@@ -442,16 +428,11 @@ function answerQuestion(choice) {
   locked = true;
   const q = QUESTIONS[currentIdx];
   if (q.type === "scoring") scoringBits.push(choice);
-  
-  // Fade out
-  fadeAlpha = 0;
-  isAnimating = true;
-  
   setTimeout(() => {
     currentIdx++;
     selectedChoice = null; // Reset selection for next question
     locked = false;
-  }, 200); // Short delay
+  }, 120);
 }
 
 function restartQuiz() {
@@ -459,8 +440,6 @@ function restartQuiz() {
   scoringBits = [];
   selectedChoice = null;
   appState = "start";
-  isAnimating = false;
-  fadeAlpha = 255;
 }
 
 /* ---------------- SHARE ---------------- */
@@ -510,21 +489,17 @@ function drawQuestionScreen(q) {
   const cw = contentWidth();
   const cx = contentX();
 
-  // Apply fade effect to all question content
-  push();
-  tint(255, fadeAlpha); // Fade images
-  
   textSize(15);
-  fill(20, fadeAlpha); // Fade text
+  fill(20);
   text(`Q ${currentIdx + 1} / ${QUESTIONS.length}`, width / 2, pad + 12);
 
   // Draw prompt FIRST (above image)
-  fill(74, 0, 162, fadeAlpha); // #4a00a2 with fade
+  fill("#4a00a2");
   textSize(18);
   textWrap(WORD);
   text(q.prompt, cx, pad + 70, cw);
 
-  // Draw image SECOND (below prompt)
+// Draw image SECOND (below prompt)
   const imgTop = pad + 120;
   const imgH = height * 0.50;
   drawMediaFrame(q.imgId, cx, imgTop, cw, imgH);
@@ -538,13 +513,11 @@ function drawQuestionScreen(q) {
   const isSelected1 = selectedChoice === 1;
   
   drawChoiceButton(cx, btnY1, cw, btnH, q.choices[0], 
-    isTouching(cx, btnY1, cw, btnH), isSelected0, fadeAlpha);
+    isTouching(cx, btnY1, cw, btnH), isSelected0);
   drawChoiceButton(cx, btnY2, cw, btnH, q.choices[1], 
-    isTouching(cx, btnY2, cw, btnH), isSelected1, fadeAlpha);
+    isTouching(cx, btnY2, cw, btnH), isSelected1);
   
-  pop();
-
-  // Confirm button at the bottom (always visible - no fade)
+  // Confirm button at the bottom (different style)
   const confirmY = height - pad - btnH;
   const canConfirm = selectedChoice !== null;
   
@@ -585,33 +558,25 @@ function drawButton(x, y, w, h, label, hot) {
   text(label, x + w / 2, y + h / 2);
 }
 
-function drawChoiceButton(x, y, w, h, label, hot, isSelected, alpha) {
+function drawChoiceButton(x, y, w, h, label, hot, isSelected) {
   // unselected state: darker purple fill, white text
   // selected state: light purple fill, dark text
   if (isSelected) {
-    fill(218, 187, 255, alpha); // #DABBFF with fade
-    stroke(174, 135, 231, alpha); // #AE87E7 with fade
+    fill("#DABBFF"); // Selected: bold purple
+    stroke("#AE87E7");
     strokeWeight(2); 
     rect(x+22, y, w-44, h, 10);
   } else {
-    if (hot) {
-      fill(218, 187, 255, alpha); // #DABBFF with fade
-    } else {
-      fill(174, 135, 231, alpha); // #AE87E7 with fade
-    }
+    fill(hot ? "#DABBFF" : "#AE87E7"); // Hover or normal state
     noStroke();
     rect(x+20, y, w-40, h, 10);
   }
   
+  
+  
   // Text color based on selection
   noStroke();
-  if (isSelected) {
-    fill(174, 135, 231, alpha); // #AE87E7 with fade
-  } else if (hot) {
-    fill(247, 239, 255, alpha); // #F7EFFF with fade
-  } else {
-    fill(250, alpha);
-  }
+  fill(isSelected ? "#AE87E7" : (hot ? "#F7EFFF" : 250));
   textSize(isSelected ? 15 : (hot ? 16 : 15));
   text(label, x + w / 2, y + h / 2);
 }
