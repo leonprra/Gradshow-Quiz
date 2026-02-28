@@ -38,10 +38,7 @@ let selectedChoice = null; // Track which choice is selected (0 or 1)
 
 // Animation variables
 let isAnimating = false;
-let animationProgress = 0;
-let animationDuration = 400; // milliseconds
-let animationStartTime = 0;
-let slideDirection = 0; // -1 = slide up/out, 1 = slide down/in
+let fadeAlpha = 255; // 255 = fully visible, 0 = invisible
 
 function preload() {
   QIMG.start = loadImage("start.png");
@@ -168,17 +165,12 @@ function draw() {
     }
   }
 
-  // Update animation
+  // Update fade animation
   if (isAnimating) {
-    let elapsed = millis() - animationStartTime;
-    animationProgress = constrain(elapsed / animationDuration, 0, 1);
-    
-    // Use easing for smoother animation
-    animationProgress = easeInOutCubic(animationProgress);
-    
-    if (elapsed >= animationDuration) {
+    fadeAlpha += 15; // Fade in speed
+    if (fadeAlpha >= 255) {
+      fadeAlpha = 255;
       isAnimating = false;
-      animationProgress = 0;
     }
   }
 
@@ -187,11 +179,6 @@ function draw() {
   else if (appState === "quiz") drawQuiz();
   else if (appState === "calculating") drawCalculatingScreen();
   else if (appState === "result") drawResultScreen();
-}
-
-// Easing function for smooth animation
-function easeInOutCubic(t) {
-  return t < 0.5 ? 4 * t * t * t : 1 - pow(-2 * t + 2, 3) / 2;
 }
 
 /* ---------------- SCREENS ---------------- */
@@ -456,21 +443,15 @@ function answerQuestion(choice) {
   const q = QUESTIONS[currentIdx];
   if (q.type === "scoring") scoringBits.push(choice);
   
-  // Start slide-up animation
+  // Fade out
+  fadeAlpha = 0;
   isAnimating = true;
-  animationStartTime = millis();
-  slideDirection = -1; // Slide up/out
   
   setTimeout(() => {
     currentIdx++;
     selectedChoice = null; // Reset selection for next question
-    
-    // Start slide-down animation for new question
-    slideDirection = 1; // Slide down/in
-    animationStartTime = millis();
-    
     locked = false;
-  }, animationDuration);
+  }, 200); // Short delay
 }
 
 function restartQuiz() {
@@ -479,7 +460,7 @@ function restartQuiz() {
   selectedChoice = null;
   appState = "start";
   isAnimating = false;
-  animationProgress = 0;
+  fadeAlpha = 255;
 }
 
 /* ---------------- SHARE ---------------- */
@@ -529,27 +510,16 @@ function drawQuestionScreen(q) {
   const cw = contentWidth();
   const cx = contentX();
 
-  // Calculate animation offset
-  let yOffset = 0;
-  if (isAnimating) {
-    if (slideDirection === -1) {
-      // Slide up/out
-      yOffset = -height * animationProgress;
-    } else {
-      // Slide down/in
-      yOffset = height * (1 - animationProgress);
-    }
-  }
-
+  // Apply fade effect to all question content
   push();
-  translate(0, yOffset); // Apply animation offset
-
+  tint(255, fadeAlpha); // Fade images
+  
   textSize(15);
-  fill(20);
+  fill(20, fadeAlpha); // Fade text
   text(`Q ${currentIdx + 1} / ${QUESTIONS.length}`, width / 2, pad + 12);
 
   // Draw prompt FIRST (above image)
-  fill("#4a00a2");
+  fill(74, 0, 162, fadeAlpha); // #4a00a2 with fade
   textSize(18);
   textWrap(WORD);
   text(q.prompt, cx, pad + 70, cw);
@@ -568,13 +538,13 @@ function drawQuestionScreen(q) {
   const isSelected1 = selectedChoice === 1;
   
   drawChoiceButton(cx, btnY1, cw, btnH, q.choices[0], 
-    isTouching(cx, btnY1, cw, btnH), isSelected0);
+    isTouching(cx, btnY1, cw, btnH), isSelected0, fadeAlpha);
   drawChoiceButton(cx, btnY2, cw, btnH, q.choices[1], 
-    isTouching(cx, btnY2, cw, btnH), isSelected1);
+    isTouching(cx, btnY2, cw, btnH), isSelected1, fadeAlpha);
   
-  pop(); // End of animated content
+  pop();
 
-  // Confirm button at the bottom (STAYS IN PLACE - not affected by animation)
+  // Confirm button at the bottom (always visible - no fade)
   const confirmY = height - pad - btnH;
   const canConfirm = selectedChoice !== null;
   
@@ -615,25 +585,33 @@ function drawButton(x, y, w, h, label, hot) {
   text(label, x + w / 2, y + h / 2);
 }
 
-function drawChoiceButton(x, y, w, h, label, hot, isSelected) {
+function drawChoiceButton(x, y, w, h, label, hot, isSelected, alpha) {
   // unselected state: darker purple fill, white text
   // selected state: light purple fill, dark text
   if (isSelected) {
-    fill("#DABBFF"); // Selected: bold purple
-    stroke("#AE87E7");
+    fill(218, 187, 255, alpha); // #DABBFF with fade
+    stroke(174, 135, 231, alpha); // #AE87E7 with fade
     strokeWeight(2); 
     rect(x+22, y, w-44, h, 10);
   } else {
-    fill(hot ? "#DABBFF" : "#AE87E7"); // Hover or normal state
+    if (hot) {
+      fill(218, 187, 255, alpha); // #DABBFF with fade
+    } else {
+      fill(174, 135, 231, alpha); // #AE87E7 with fade
+    }
     noStroke();
     rect(x+20, y, w-40, h, 10);
   }
   
-  
-  
   // Text color based on selection
   noStroke();
-  fill(isSelected ? "#AE87E7" : (hot ? "#F7EFFF" : 250));
+  if (isSelected) {
+    fill(174, 135, 231, alpha); // #AE87E7 with fade
+  } else if (hot) {
+    fill(247, 239, 255, alpha); // #F7EFFF with fade
+  } else {
+    fill(250, alpha);
+  }
   textSize(isSelected ? 15 : (hot ? 16 : 15));
   text(label, x + w / 2, y + h / 2);
 }
