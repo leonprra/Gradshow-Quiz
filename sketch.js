@@ -54,6 +54,10 @@ function preload() {
 }
 
 function setup() {
+  
+  textFont("Inter Tight"); // Change from "Helvetica" to "Inter Tight"
+  textAlign(CENTER, CENTER);
+  
   time = millis();
 
   // IMPORTANT: keep a reference to the p5 canvas element
@@ -90,9 +94,6 @@ function setup() {
     (e) => e.preventDefault(),
     { passive: false }
   );
-
-  textFont("Helvetica");
-  textAlign(CENTER, CENTER);
 
   QUESTIONS = [
     {
@@ -186,7 +187,6 @@ textAlign(LEFT);
 
 // First paragraph
 textSize(18);
-textFont("Helvetica");
 textStyle(BOLD);
 fill("#7a00db");
 let txt1 = "Every design gradshow is more than just final pieces on display.";
