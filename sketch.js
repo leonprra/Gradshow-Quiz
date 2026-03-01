@@ -36,8 +36,10 @@ let scoringBits = [];
 let locked = false;
 let selectedChoice = null; // Track which choice is selected (0 or 1)
 
-// Simple fade animation
-let questionAlpha = 255; // Start fully visible
+// Simple fade animation with scaling
+let questionAlpha = 0; // Start fully visible
+let questionScale = 1.0; // Start at 100% scale
+let isTransitioning = false; // Track if we're between questions
 
 function preload() {
   QIMG.start = loadImage("start.png");
@@ -164,10 +166,23 @@ function draw() {
     }
   }
 
-  // Fade in animation - only runs when questionAlpha < 255
-  if (questionAlpha < 255) {
-    questionAlpha += 5; // Fade in speed
-    if (questionAlpha > 255) questionAlpha = 255;
+  // Animation logic
+  if (isTransitioning) {
+    // Phase 1: Fade out and scale down
+    if (questionAlpha > 0) {
+      questionAlpha -= 25; // Fade out speed
+      questionScale -= 0.012; // Scale down speed (reaches 0.9 when alpha hits 0)
+      if (questionAlpha < 0) questionAlpha = 0;
+      if (questionScale < 0.9) questionScale = 0.9;
+    }
+  } else {
+    // Phase 2: Fade in and scale up (when not transitioning)
+    if (questionAlpha < 255) {
+      questionAlpha += 25; // Fade in speed
+      questionScale += 0.012; // Scale up speed
+      if (questionAlpha > 255) questionAlpha = 255;
+      if (questionScale > 1.0) questionScale = 1.0;
+    }
   }
 
   if (appState === "start") drawStartScreen();
@@ -277,8 +292,11 @@ function drawPreparingScreen() {
 
   // Auto-advance to quiz after wait time
   if (millis() - time >= preparingWait) {
+    questionAlpha = 0; // Reset for fade-in on first question
+    questionScale = 0.9;
     appState = "quiz";
     time = millis(); // Reset time for quiz
+    
   }
 }
 
@@ -439,14 +457,16 @@ function answerQuestion(choice) {
   const q = QUESTIONS[currentIdx];
   if (q.type === "scoring") scoringBits.push(choice);
   
-  // Trigger fade out then advance
-  questionAlpha = 0; // Set to 0 to start fade-in on next question
+  // Start transition (fade out and scale down)
+  isTransitioning = true;
   
+  // Wait for fade out to complete (~400ms), then load next question
   setTimeout(() => {
     currentIdx++;
     selectedChoice = null; // Reset selection for next question
+    isTransitioning = false; // Start fade in and scale up
     locked = false;
-  }, 150);
+  }, 400); // Adjust this timing to match fade out duration
 }
 
 function restartQuiz() {
@@ -455,6 +475,8 @@ function restartQuiz() {
   selectedChoice = null;
   appState = "start";
   questionAlpha = 255;
+  questionScale = 1.0;
+  isTransitioning = false;
 }
 
 /* ---------------- SHARE ---------------- */
@@ -504,6 +526,12 @@ function drawQuestionScreen(q) {
   const cw = contentWidth();
   const cx = contentX();
 
+  // Apply scale transformation from center
+  push();
+  translate(width / 2, height / 2);
+  scale(questionScale);
+  translate(-width / 2, -height / 2);
+
   // Question number (with fade)
   textSize(15);
   fill(20, questionAlpha);
@@ -515,7 +543,7 @@ function drawQuestionScreen(q) {
   textWrap(WORD);
   text(q.prompt, cx, pad + 70, cw);
 
-  // Draw image SECOND (below prompt) - with fade
+  // Draw image SECOND (below prompt) - with fade and tint
   push();
   tint(255, questionAlpha); // Apply fade to image
   const imgTop = pad + 120;
@@ -536,7 +564,9 @@ function drawQuestionScreen(q) {
   drawChoiceButton(cx, btnY2, cw, btnH, q.choices[1], 
     isTouching(cx, btnY2, cw, btnH), isSelected1, questionAlpha);
   
-  // Confirm button at the bottom (NO FADE - always visible)
+  pop(); // End scale transformation
+
+  // Confirm button at the bottom (NO FADE, NO SCALE - always visible)
   const confirmY = height - pad - btnH;
   const canConfirm = selectedChoice !== null;
   
