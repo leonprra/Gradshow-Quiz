@@ -133,7 +133,7 @@ function setup() {
       type: "scoring",
       prompt: "Your deskmate has been staring at their screen for the past 10 minutes… same tab, same sigh, zero progress.",
       imgId: "q5",
-      choices: ["Roll my chair over, "What's not working?"", "Roll my chair over, "Coffee break!!""]
+      choices: ["Roll my chair over, What's not working?", "Roll my chair over, Coffee break!!"]
     },
     {
       id: "q6",
