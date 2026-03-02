@@ -547,7 +547,15 @@ function drawQuestionScreen(q) {
   push();
   tint(255, questionAlpha); // Apply fade to image
   const imgTop = pad + 120;
-  const imgH = height * 0.50;
+
+  // Calculate maximum image height to ensure 24px gap above buttons
+  const btnY1 = height - pad - btnH * 3 - btnGap * 2; // First button position
+  const minGap = 24; // Minimum gap between image and buttons
+  const maxImgHeight = btnY1 - imgTop - minGap; // Available space for image
+
+  // Use the smaller of: 50% screen height OR available space
+  const imgH = min(height * 0.50, maxImgHeight);
+
   drawMediaFrame(q.imgId, cx, imgTop, cw, imgH);
   pop();
 
