@@ -560,7 +560,6 @@ function drawQuestionScreen(q) {
   pop();
 
   // Two choice buttons - with fade
-  const btnY1 = height - pad - btnH * 3 - btnGap * 2;
   const btnY2 = height - pad - btnH * 2 - btnGap;
   
   // Draw choice buttons with selected state
