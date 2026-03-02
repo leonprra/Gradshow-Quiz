@@ -51,7 +51,7 @@ function preload() {
   QIMG.q4 = loadImage("q4.png");
   QIMG.q5 = loadImage("q5.png");
   QIMG.q6 = loadImage("q6.png");
-  //  QIMG.q7 = loadImage("q7.png");
+  QIMG.q7 = loadImage("q7.png");
 
 
   // --- Result images placeholders (16 variations) ---
