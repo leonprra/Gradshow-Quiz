@@ -149,7 +149,7 @@ function setup() {
       type: "padding",
       prompt: "You have a 15-minute break after an intense session.",
       imgId: "q7",
-      choices: ["Let's all go for a walk and a snack!", "Lemme reset my brain in a calm space"]
+      choices: ["Let's all go for a walk and get a snack!", "Lemme reset my brain in a calm space"]
     }
   ];
 }
@@ -343,9 +343,9 @@ function drawResultScreen() {
   const cx = contentX();
   const key = getResultKey();
 
-  textSize(22);
+  textSize(16);
   fill(20);
-  text("Your Result", width / 2, pad + 22);
+  text("Different tools build different things. Different people build different experiences. Now that you know your vibe…", width / 2, pad + 22);
 
   const imgTop = pad + 70;
   const imgH = height * 0.45;
@@ -361,7 +361,10 @@ function drawResultScreen() {
     fill(140);
     text("Result image here", width / 2, imgTop + imgH / 2);
   }
-
+  // NEW: Visit Website button (full width on top)
+  const visitBtnY = height - pad - btnH * 2 - btnGap;
+  drawButton(cx, visitBtnY, cw, btnH, "Visit the website!", isTouching(cx, visitBtnY, cw, btnH));
+  
   // Buttons
   const btnY = height - pad - btnH;
   const half = (cw - btnGap) / 2;
@@ -414,6 +417,13 @@ function handleTap(px, py) {
   if (appState === "result") {
     const btnY = height - pad - btnH;
     const half = (cw - btnGap) / 2;
+
+    // Check Visit Website button (top button)
+  const visitBtnY = height - pad - btnH * 2 - btnGap;
+  if (hit(px, py, cx, visitBtnY, cw, btnH)) {
+    window.open("https://vina-setiawaty.github.io/Gradwebsite-2026/loading.html", "_blank");
+    return;
+  }
 
     if (hit(px, py, cx, btnY, half, btnH)) restartQuiz();
     else if (hit(px, py, cx + half + btnGap, btnY, half, btnH)) shareResult();
