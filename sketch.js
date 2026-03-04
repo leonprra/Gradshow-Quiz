@@ -417,18 +417,17 @@ function handleTap(px, py) {
   if (appState === "result") {
     const btnY = height - pad - btnH;
     const half = (cw - btnGap) / 2;
-
-    // Check Visit Website button (top button)
-  const visitBtnY = height - pad - btnH * 2 - btnGap;
+    const visitBtnY = height - pad - btnH * 2 - btnGap;
+  
+    if (hit(px, py, cx, btnY, half, btnH)) restartQuiz();
+    else if (hit(px, py, cx + half + btnGap, btnY, half, btnH)) shareResult();
+    return;
+  }
   if (hit(px, py, cx, visitBtnY, cw, btnH)) {
     window.open("https://vina-setiawaty.github.io/Gradwebsite-2026/loading.html", "_blank");
     return;
   }
 
-    if (hit(px, py, cx, btnY, half, btnH)) restartQuiz();
-    else if (hit(px, py, cx + half + btnGap, btnY, half, btnH)) shareResult();
-    return;
-  }
 
   // Quiz screen - handle choice selection and confirmation
   if (appState === "quiz") {
