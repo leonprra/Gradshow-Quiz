@@ -345,7 +345,7 @@ function drawResultScreen() {
 
   textSize(16);
   fill(20);
-  text("Different tools build different things. Different people build different experiences. Now that you know your vibe…", width / 2, pad + 22);
+  text("Different tools build different things. Different people build different experiences. Now that you know your vibe…", width / 2, pad + 22);
 
   const imgTop = pad + 70;
   const imgH = height * 0.45;
@@ -414,20 +414,29 @@ function handleTap(px, py) {
     return;
   }
 
+  // FIXED: Result screen button handling
   if (appState === "result") {
     const btnY = height - pad - btnH;
     const half = (cw - btnGap) / 2;
     const visitBtnY = height - pad - btnH * 2 - btnGap;
   
-    if (hit(px, py, cx, btnY, half, btnH)) restartQuiz();
-    else if (hit(px, py, cx + half + btnGap, btnY, half, btnH)) shareResult();
+    // Check bottom row FIRST (Restart and Share)
+    if (hit(px, py, cx, btnY, half, btnH)) {
+      restartQuiz();
+      return;
+    }
+    if (hit(px, py, cx + half + btnGap, btnY, half, btnH)) {
+      shareResult();
+      return;
+    }
+    
+    // Then check Visit Website button (top button)
+    if (hit(px, py, cx, visitBtnY, cw, btnH)) {
+      window.open("https://vina-setiawaty.github.io/Gradwebsite-2026/loading.html", "_blank");
+      return;
+    }
     return;
   }
-  if (hit(px, py, cx, visitBtnY, cw, btnH)) {
-    window.open("https://vina-setiawaty.github.io/Gradwebsite-2026/loading.html", "_blank");
-    return;
-  }
-
 
   // Quiz screen - handle choice selection and confirmation
   if (appState === "quiz") {
@@ -435,8 +444,8 @@ function handleTap(px, py) {
     const btnY2 = height - pad - btnH * 2 - btnGap;
     const confirmY = height - pad - btnH;
     
-    // Confirm button dimensions (must match drawConfirmButton)
-    const confirmBtnWidth = 140;
+    // FIXED: Confirm button dimensions (must match drawConfirmButton)
+    const confirmBtnWidth = 200; // Changed from 140 to match actual button width
     const confirmX = cx + (cw - confirmBtnWidth) / 2;
 
     // Check if tapping choice 1
