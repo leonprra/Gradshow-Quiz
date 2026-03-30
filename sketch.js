@@ -347,38 +347,37 @@ function drawResultScreen() {
   const cx = contentX();
   const character = getCharacter();
 
-  textSize(20);
-  fill("#7a00db");
-  textStyle(BOLD);
-  text("You are...", width / 2, pad + 30);
-
-  textSize(32);
-  fill(20);
-  text(CHARACTERS[character], width / 2, pad + 80);
-
-  const imgTop = pad + 130;
-  const imgH = height * 0.35;
-
+  // Calculate button positions
+  const visitBtnY = height - pad - btnH * 2 - btnGap;
+  const btnY = height - pad - btnH;
+  
+  // Calculate image area (from top to button with padding)
+  const imgPadding = 24; // padding above button
+  const imgTop = pad + 20;
+  const imgBottom = visitBtnY - imgPadding;
+  const availableHeight = imgBottom - imgTop;
+  
+  // Use full available height
   const res = RESULT_IMAGES[character];
   if (res) {
-    const fitted = fitRect(res.width, res.height, cw, imgH);
+    // Fit image to available space (maintaining aspect ratio)
+    const fitted = fitRect(res.width, res.height, cw, availableHeight);
+    imageMode(CORNER);
     image(res, cx + fitted.x, imgTop + fitted.y, fitted.w, fitted.h);
   } else {
     noStroke();
     fill(245);
-    rect(cx, imgTop, cw, imgH, 16);
+    rect(cx, imgTop, cw, availableHeight, 16);
     fill(140);
-    text("Result image here", width / 2, imgTop + imgH / 2);
+    textSize(14);
+    text("Result image here", width / 2, imgTop + availableHeight / 2);
   }
 
   // Visit Website button
-  const visitBtnY = height - pad - btnH * 2 - btnGap;
   drawButton(cx, visitBtnY, cw, btnH, "Visit the website!", isTouching(cx, visitBtnY, cw, btnH));
   
   // Restart and Share buttons
-  const btnY = height - pad - btnH;
   const half = (cw - btnGap) / 2;
-
   drawButton(cx, btnY, half, btnH, "Restart", isTouching(cx, btnY, half, btnH));
   drawButton(cx + half + btnGap, btnY, half, btnH, "Share", isTouching(cx + half + btnGap, btnY, half, btnH));
 }
