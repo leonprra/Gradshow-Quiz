@@ -74,8 +74,8 @@ function preload() {
   RESULT_IMAGES["calipers"] = loadImage("Callipers.png");
   RESULT_IMAGES["vr"] = loadImage("VR.png");
   RESULT_IMAGES["mouse"] = loadImage("Mouse.png");
-  RESULT_IMAGES["mat"] = loadImage("Cutting Mat.png");
-  RESULT_IMAGES["glue"] = loadImage("Glue Stick.png");
+  RESULT_IMAGES["mat"] = loadImage("CuttingMat.png");
+  RESULT_IMAGES["glue"] = loadImage("GlueStick.png");
   RESULT_IMAGES["sewing"] = loadImage("Sewing.png");
   RESULT_IMAGES["tape"] = loadImage("Tape.png");
   RESULT_IMAGES["notepad"] = loadImage("Notepad.png");
