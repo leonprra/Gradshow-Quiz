@@ -71,7 +71,7 @@ function preload() {
 
   // Result images - 11 characters
   RESULT_IMAGES["hammer"] = loadImage("Hammer.png");
-  RESULT_IMAGES["calipers"] = loadImage("Callipers.png");
+  RESULT_IMAGES["calipers"] = loadImage("Calipers.png");
   RESULT_IMAGES["vr"] = loadImage("VR.png");
   RESULT_IMAGES["mouse"] = loadImage("Mouse.png");
   RESULT_IMAGES["mat"] = loadImage("CuttingMat.png");
