@@ -437,7 +437,7 @@ function handleTap(px, py) {
     }
     
     if (hit(px, py, cx, visitBtnY, cw, btnH)) {
-      window.open("https://vina-setiawaty.github.io/Gradwebsite-2026/loading.html", "_blank");
+      window.location.href = "https://vina-setiawaty.github.io/Gradwebsite-2026/loading.html";
       return;
     }
     return;
@@ -499,14 +499,34 @@ function restartQuiz() {
 function shareResult() {
   const character = getCharacter();
   const text = `I am ${CHARACTERS[character]} on the DID Grad Show 2026 Quiz!`;
+  const shareUrl = window.location.href;
 
+  // Telegram WebApp - try multiple methods
   if (window.Telegram && window.Telegram.WebApp) {
-    window.Telegram.WebApp.shareLink(window.location.href, text);
-  } else if (navigator.share) {
+    try {
+      // Method 1: Share to story (newer Telegram versions)
+      if (window.Telegram.WebApp.shareToStory) {
+        window.Telegram.WebApp.shareToStory(shareUrl, {
+          text: text
+        });
+        return;
+      }
+      
+      // Method 2: Open Telegram share URL
+      const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(text)}`;
+      window.Telegram.WebApp.openTelegramLink(telegramShareUrl);
+      return;
+    } catch (e) {
+      console.log("Telegram share failed:", e);
+    }
+  }
+  
+  // Fallback: Web Share API (works on most mobile browsers)
+  if (navigator.share) {
     navigator.share({
       title: "What Tool Are You!",
       text: text,
-      url: window.location.href
+      url: shareUrl
     }).catch(() => {
       copyToClipboard(text);
     });
