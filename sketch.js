@@ -68,14 +68,17 @@ function preload() {
   QIMG.q5 = loadImage("q5.png");
   QIMG.q6 = loadImage("q6.png");
   QIMG.q7 = loadImage("q7.png");
+  //QIMG.q8 = loadImage("q8.png");
+ // QIMG.q9 = loadImage("q9.png");
+  //QIMG.q10 = loadImage("q10.png");
 
   // Result images - 11 characters
   RESULT_IMAGES["hammer"] = loadImage("Hammer.png");
-  RESULT_IMAGES["calipers"] = loadImage("Calipers.png");
+  RESULT_IMAGES["calipers"] = loadImage("Callipers.png");
   RESULT_IMAGES["vr"] = loadImage("VR.png");
   RESULT_IMAGES["mouse"] = loadImage("Mouse.png");
-  RESULT_IMAGES["mat"] = loadImage("CuttingMat.png");
-  RESULT_IMAGES["glue"] = loadImage("GlueStick.png");
+  RESULT_IMAGES["mat"] = loadImage("Cutting Mat.png");
+  RESULT_IMAGES["glue"] = loadImage("Glue Stick.png");
   RESULT_IMAGES["sewing"] = loadImage("Sewing.png");
   RESULT_IMAGES["tape"] = loadImage("Tape.png");
   RESULT_IMAGES["notepad"] = loadImage("Notepad.png");
@@ -163,9 +166,30 @@ function setup() {
     {
       id: "q7",
       type: "padding",
-      prompt: "You have a 15-minute break after an intense session.",
+      prompt: "You have a 25-minute break after a long session.",
       imgId: "q7",
       choices: ["Let's all go for a walk and get a snack!", "Lemme reset my brain in a calm space"]
+    },
+    {
+      id: "q8",
+      type: "scoring",
+      prompt: "You come across a once-in-a-lifetime moment of beauty, but your hands are full! Do you...",
+      imgId: "q8",
+      choices: ["Struggle to take out your phone to capture it", "Just enjoy it with your eyes"]
+    },
+    {
+      id: "q9",
+      type: "scoring",
+      prompt: "Something's not working and you don't know why. Do you...",
+      imgId: "q9",
+      choices: ["Google an answer immediately", "Sit and think it through first"]
+    },
+    {
+      id: "q10",
+      type: "scoring",
+      prompt: "A new project brief just dropped. Do you...",
+      imgId: "q10",
+      choices: ["Start fantasizing ideas right away", "Read the brief 3 times and make a timeline first"]
     }
   ];
 }
@@ -501,37 +525,25 @@ function shareResult() {
   const text = `I am ${CHARACTERS[character]} on the DID Grad Show 2026 Quiz!`;
   const shareUrl = window.location.href;
 
-  // Telegram WebApp - try multiple methods
-  if (window.Telegram && window.Telegram.WebApp) {
-    try {
-      // Method 1: Share to story (newer Telegram versions)
-      if (window.Telegram.WebApp.shareToStory) {
-        window.Telegram.WebApp.shareToStory(shareUrl, {
-          text: text
-        });
-        return;
-      }
-      
-      // Method 2: Open Telegram share URL
-      const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(text)}`;
-      window.Telegram.WebApp.openTelegramLink(telegramShareUrl);
-      return;
-    } catch (e) {
-      console.log("Telegram share failed:", e);
-    }
-  }
+  // Direct Telegram share URL - works in all Telegram browsers
+  const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(text)}`;
   
-  // Fallback: Web Share API (works on most mobile browsers)
-  if (navigator.share) {
-    navigator.share({
-      title: "What Tool Are You!",
-      text: text,
-      url: shareUrl
-    }).catch(() => {
+  // Try to open in same window (stays in Telegram)
+  try {
+    window.location.href = telegramShareUrl;
+  } catch (e) {
+    // Fallback: Web Share API
+    if (navigator.share) {
+      navigator.share({
+        title: "What Tool Are You!",
+        text: text,
+        url: shareUrl
+      }).catch(() => {
+        copyToClipboard(text);
+      });
+    } else {
       copyToClipboard(text);
-    });
-  } else {
-    copyToClipboard(text);
+    }
   }
 }
 
@@ -647,6 +659,45 @@ function getCharacter() {
     scores.notepad += 1;
     scores.vr += 2;
     scores.calipers += 1;
+  }
+  
+  // Q8: Beauty moment (SCORING)
+  if (answers[7] === 0) { // Capture it
+    scores.notepad += 3;
+    scores.mouse += 2;
+    scores.calipers += 1;
+    scores.mat += 1;
+  } else { // Just enjoy
+    scores.coffee += 3;
+    scores.vr += 2;
+    scores.sewing += 1;
+    scores.hammer += 1;
+  }
+  
+  // Q9: Something not working (SCORING)
+  if (answers[8] === 0) { // Google it
+    scores.mouse += 3;
+    scores.vr += 2;
+    scores.hammer += 2;
+    scores.tape += 1;
+  } else { // Think it through
+    scores.notepad += 3;
+    scores.calipers += 2;
+    scores.ruler += 2;
+    scores.sewing += 1;
+  }
+  
+  // Q10: New project brief (SCORING)
+  if (answers[9] === 0) { // Start sketching
+    scores.hammer += 3;
+    scores.tape += 2;
+    scores.vr += 2;
+    scores.glue += 1;
+  } else { // Read & timeline
+    scores.ruler += 3;
+    scores.mat += 2;
+    scores.calipers += 2;
+    scores.notepad += 1;
   }
   
   // Find winner
