@@ -68,9 +68,9 @@ function preload() {
   QIMG.q5 = loadImage("q5.png");
   QIMG.q6 = loadImage("q6.png");
   QIMG.q7 = loadImage("q7.png");
-  //QIMG.q8 = loadImage("q8.png");
- // QIMG.q9 = loadImage("q9.png");
-  //QIMG.q10 = loadImage("q10.png");
+  QIMG.q8 = loadImage("q8.png");
+  QIMG.q9 = loadImage("q9.png");
+  QIMG.q10 = loadImage("q10.png");
 
   // Result images - 11 characters
   RESULT_IMAGES["hammer"] = loadImage("Hammer.png");
