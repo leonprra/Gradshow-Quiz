@@ -480,12 +480,16 @@ function drawGalleryGrid(x, y, w, h) {
   textAlign(CENTER);
   text("All Tools", x + w/2, y + 50);
   
-  // Grid of thumbnails (3 columns, 4 rows)
+  // Responsive grid: 4 cols on desktop (wide), 3 cols on mobile
   const gridStartY = y + 90;
   const gridPad = 12;
-  const cols = 3;
-  const rows = 4;
-  const thumbW = (w - gridPad * (cols + 1)) / cols;
+  const cols = width > 600 ? 4 : 3; // 4 columns if wide, 3 if narrow
+  const rows = width > 600 ? 3 : 4; // 3 rows if wide, 4 if narrow
+  
+  const availableW = w - gridPad * (cols + 1);
+  const availableH = h - gridStartY + y - gridPad;
+  
+  const thumbW = availableW / cols;
   const thumbH = thumbW * 1.33; // Aspect ratio
   
   const tools = ["hammer", "calipers", "vr", "mouse", "mat", "glue", "sewing", "tape", "notepad", "coffee", "ruler", "thumb"];
@@ -596,8 +600,10 @@ function handleGalleryTap(px, py) {
   // Check thumbnail grid
   const gridStartY = modalY + 90;
   const gridPad = 12;
-  const cols = 3;
-  const thumbW = (modalW - gridPad * (cols + 1)) / cols;
+  const cols = width > 600 ? 4 : 3; // Match drawGalleryGrid
+  
+  const availableW = modalW - gridPad * (cols + 1);
+  const thumbW = availableW / cols;
   const thumbH = thumbW * 1.33;
   
   const tools = ["hammer", "calipers", "vr", "mouse", "mat", "glue", "sewing", "tape", "notepad", "coffee", "ruler", "thumb"];
@@ -791,7 +797,7 @@ function getCharacter() {
     thumb: 0
   };
   
- // Q1: Wake up (padding)
+  // Q1: Wake up (padding)
   if (answers[0] === 0) { // Sleep in
     scores.coffee += 1;
     scores.notepad += 1;
@@ -816,16 +822,16 @@ function getCharacter() {
   
   // Q3: Bus delayed (SCORING) - USB gets high score for "update the group"
   if (answers[2] === 0) { // Take route and UPDATE THE GROUP
-    scores.ruler += 2;
+    scores.ruler += 3;
     scores.thumb += 3; // USB Drive: connector, shares info
     scores.mouse += 2;
     scores.calipers += 2;
     scores.vr += 1;
-  } else { // Buy snacks - BOOSTED MAT
+  } else { // Buy snacks
     scores.coffee += 3;
-    scores.mat += 2; // CHANGED from +1 to +2
     scores.glue += 2;
-    scores.tape += 1; // CHANGED from +2 to +1 (nerf Tape)
+    scores.tape += 2;
+    scores.mat += 1;
   }
   
   // Q4: Desk mess (SCORING)
@@ -835,7 +841,7 @@ function getCharacter() {
     scores.glue += 2;
     scores.mouse += 1;
   } else { // Reset table
-    scores.ruler += 2;
+    scores.ruler += 3;
     scores.mat += 2;
     scores.sewing += 2;
     scores.calipers += 1;
@@ -843,11 +849,10 @@ function getCharacter() {
   }
   
   // Q5: Deskmate stuck (SCORING)
-  if (answers[4] === 0) { // What's not working? - BOOSTED USB
+  if (answers[4] === 0) { // What's not working?
     scores.notepad += 3;
     scores.mouse += 2;
     scores.calipers += 2;
-    scores.thumb += 1; // ADDED (helps troubleshoot/share solutions)
     scores.sewing += 1;
   } else { // Coffee break!
     scores.coffee += 3;
@@ -862,11 +867,11 @@ function getCharacter() {
     scores.tape += 2;
     scores.mouse += 2;
     scores.glue += 1;
-  } else { // Keep tweaking - NERFED NOTEPAD
+  } else { // Keep tweaking
     scores.sewing += 3;
     scores.calipers += 2;
     scores.ruler += 2;
-    // REMOVED notepad += 1
+    scores.notepad += 1;
   }
   
   // Q7: Break time (padding)
@@ -887,10 +892,9 @@ function getCharacter() {
     scores.mouse += 2;
     scores.calipers += 1;
     scores.mat += 1;
-  } else { // Just enjoy - BOOSTED MAT
+  } else { // Just enjoy
     scores.coffee += 3;
     scores.vr += 2;
-    scores.mat += 1; // ADDED (enjoys present moment, provides foundation)
     scores.sewing += 1;
     scores.hammer += 1;
   }
@@ -901,11 +905,10 @@ function getCharacter() {
     scores.vr += 2;
     scores.hammer += 2;
     scores.tape += 1;
-  } else { // Think it through - NERFED RULER, BOOSTED USB
+  } else { // Think it through
     scores.notepad += 3;
     scores.calipers += 2;
-    scores.thumb += 1; // ADDED (systematic problem-solver)
-    scores.ruler += 1; // KEPT at +1 (nerf from previous +2)
+    scores.ruler += 2;
     scores.sewing += 1;
   }
   
@@ -920,8 +923,9 @@ function getCharacter() {
     scores.mat += 2;
     scores.thumb += 2; // USB: organizes, distributes info
     scores.calipers += 2;
-    // REMOVED notepad += 1
+    scores.notepad += 1;
   }
+  
   // Find winner
   let maxScore = 0;
   let winner = 'hammer';
