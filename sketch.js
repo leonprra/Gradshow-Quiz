@@ -58,7 +58,8 @@ const CHARACTERS = {
   tape: "Duct Tape",
   notepad: "Notepad",
   coffee: "Coffee",
-  ruler: "Ruler"
+  ruler: "Ruler",
+  thumb: "USB Drive"
 };
 
 function preload() {
@@ -88,6 +89,7 @@ function preload() {
   RESULT_IMAGES["notepad"] = loadImage("Notepad.png");
   RESULT_IMAGES["coffee"] = loadImage("Coffee.png");
   RESULT_IMAGES["ruler"] = loadImage("Ruler.png");
+  RESULT_IMAGES["thumb"] = loadImage("Thumb.png");
   
   // Thumbnail images for gallery
   RESULT_IMAGES["hammer_thumb"] = loadImage("hammer_thumbnail.png");
@@ -101,6 +103,7 @@ function preload() {
   RESULT_IMAGES["notepad_thumb"] = loadImage("notepad_thumbnail.png");
   RESULT_IMAGES["coffee_thumb"] = loadImage("coffee_thumbnail.png");
   RESULT_IMAGES["ruler_thumb"] = loadImage("ruler_thumbnail.png");
+  RESULT_IMAGES["thumb_thumb"] = loadImage("thumb_thumbnail.png");
 }
 
 function setup() {
@@ -485,7 +488,7 @@ function drawGalleryGrid(x, y, w, h) {
   const thumbW = (w - gridPad * (cols + 1)) / cols;
   const thumbH = thumbW * 1.33; // Aspect ratio
   
-  const tools = ["hammer", "calipers", "vr", "mouse", "mat", "glue", "sewing", "tape", "notepad", "coffee", "ruler"];
+  const tools = ["hammer", "calipers", "vr", "mouse", "mat", "glue", "sewing", "tape", "notepad", "coffee", "ruler", "thumb"];
   
   for (let i = 0; i < tools.length; i++) {
     const col = i % cols;
@@ -597,7 +600,7 @@ function handleGalleryTap(px, py) {
   const thumbW = (modalW - gridPad * (cols + 1)) / cols;
   const thumbH = thumbW * 1.33;
   
-  const tools = ["hammer", "calipers", "vr", "mouse", "mat", "glue", "sewing", "tape", "notepad", "coffee", "ruler"];
+  const tools = ["hammer", "calipers", "vr", "mouse", "mat", "glue", "sewing", "tape", "notepad", "coffee", "ruler", "thumb"];
   
   for (let i = 0; i < tools.length; i++) {
     const col = i % cols;
@@ -784,10 +787,11 @@ function getCharacter() {
     tape: 0,
     notepad: 0,
     coffee: 0,
-    ruler: 0
+    ruler: 0,
+    thumb: 0
   };
   
-  // Q1: Wake up (padding)
+ // Q1: Wake up (padding)
   if (answers[0] === 0) { // Sleep in
     scores.coffee += 1;
     scores.notepad += 1;
@@ -810,17 +814,18 @@ function getCharacter() {
     scores.calipers += 1;
   }
   
-  // Q3: Bus delayed (SCORING)
-  if (answers[2] === 0) { // Take route
-    scores.ruler += 3;
+  // Q3: Bus delayed (SCORING) - USB gets high score for "update the group"
+  if (answers[2] === 0) { // Take route and UPDATE THE GROUP
+    scores.ruler += 2;
+    scores.thumb += 3; // USB Drive: connector, shares info
     scores.mouse += 2;
     scores.calipers += 2;
     scores.vr += 1;
-  } else { // Buy snacks
+  } else { // Buy snacks - BOOSTED MAT
     scores.coffee += 3;
+    scores.mat += 2; // CHANGED from +1 to +2
     scores.glue += 2;
-    scores.tape += 2;
-    scores.mat += 1;
+    scores.tape += 1; // CHANGED from +2 to +1 (nerf Tape)
   }
   
   // Q4: Desk mess (SCORING)
@@ -830,17 +835,19 @@ function getCharacter() {
     scores.glue += 2;
     scores.mouse += 1;
   } else { // Reset table
-    scores.ruler += 3;
+    scores.ruler += 2;
     scores.mat += 2;
     scores.sewing += 2;
     scores.calipers += 1;
+    scores.thumb += 1; // Organized, systematic
   }
   
   // Q5: Deskmate stuck (SCORING)
-  if (answers[4] === 0) { // What's not working?
+  if (answers[4] === 0) { // What's not working? - BOOSTED USB
     scores.notepad += 3;
     scores.mouse += 2;
     scores.calipers += 2;
+    scores.thumb += 1; // ADDED (helps troubleshoot/share solutions)
     scores.sewing += 1;
   } else { // Coffee break!
     scores.coffee += 3;
@@ -855,11 +862,11 @@ function getCharacter() {
     scores.tape += 2;
     scores.mouse += 2;
     scores.glue += 1;
-  } else { // Keep tweaking
+  } else { // Keep tweaking - NERFED NOTEPAD
     scores.sewing += 3;
     scores.calipers += 2;
     scores.ruler += 2;
-    scores.notepad += 1;
+    // REMOVED notepad += 1
   }
   
   // Q7: Break time (padding)
@@ -874,14 +881,16 @@ function getCharacter() {
   }
   
   // Q8: Beauty moment (SCORING)
-  if (answers[7] === 0) { // Capture it
+  if (answers[7] === 0) { // Capture it - USB: saves/stores moments
     scores.notepad += 3;
+    scores.thumb += 2; // USB: backs up, preserves
     scores.mouse += 2;
     scores.calipers += 1;
     scores.mat += 1;
-  } else { // Just enjoy
+  } else { // Just enjoy - BOOSTED MAT
     scores.coffee += 3;
     scores.vr += 2;
+    scores.mat += 1; // ADDED (enjoys present moment, provides foundation)
     scores.sewing += 1;
     scores.hammer += 1;
   }
@@ -892,10 +901,11 @@ function getCharacter() {
     scores.vr += 2;
     scores.hammer += 2;
     scores.tape += 1;
-  } else { // Think it through
+  } else { // Think it through - NERFED RULER, BOOSTED USB
     scores.notepad += 3;
     scores.calipers += 2;
-    scores.ruler += 2;
+    scores.thumb += 1; // ADDED (systematic problem-solver)
+    scores.ruler += 1; // KEPT at +1 (nerf from previous +2)
     scores.sewing += 1;
   }
   
@@ -905,13 +915,13 @@ function getCharacter() {
     scores.tape += 2;
     scores.vr += 2;
     scores.glue += 1;
-  } else { // Read & timeline
+  } else { // Read & timeline - USB: systematic, shares plan
     scores.ruler += 3;
     scores.mat += 2;
+    scores.thumb += 2; // USB: organizes, distributes info
     scores.calipers += 2;
-    scores.notepad += 1;
+    // REMOVED notepad += 1
   }
-  
   // Find winner
   let maxScore = 0;
   let winner = 'hammer';
