@@ -37,6 +37,10 @@ let answers = []; // Changed from scoringBits to answers
 let locked = false;
 let selectedChoice = null;
 
+// Gallery modal state
+let showGallery = false;
+let galleryViewChar = null; // Which character is being viewed in gallery
+
 // Simple fade animation with scaling
 let questionAlpha = 0;
 let questionScale = 1.0;
@@ -84,6 +88,19 @@ function preload() {
   RESULT_IMAGES["notepad"] = loadImage("Notepad.png");
   RESULT_IMAGES["coffee"] = loadImage("Coffee.png");
   RESULT_IMAGES["ruler"] = loadImage("Ruler.png");
+  
+  // Thumbnail images for gallery
+  RESULT_IMAGES["hammer_thumb"] = loadImage("hammer_thumbnail.png");
+  RESULT_IMAGES["calipers_thumb"] = loadImage("calipers_thumbnail.png");
+  RESULT_IMAGES["vr_thumb"] = loadImage("vr_thumbnail.png");
+  RESULT_IMAGES["mouse_thumb"] = loadImage("mouse_thumbnail.png");
+  RESULT_IMAGES["mat_thumb"] = loadImage("mat_thumbnail.png");
+  RESULT_IMAGES["glue_thumb"] = loadImage("glue_thumbnail.png");
+  RESULT_IMAGES["sewing_thumb"] = loadImage("sewing_thumbnail.png");
+  RESULT_IMAGES["tape_thumb"] = loadImage("tape_thumbnail.png");
+  RESULT_IMAGES["notepad_thumb"] = loadImage("notepad_thumbnail.png");
+  RESULT_IMAGES["coffee_thumb"] = loadImage("coffee_thumbnail.png");
+  RESULT_IMAGES["ruler_thumb"] = loadImage("ruler_thumbnail.png");
 }
 
 function setup() {
@@ -166,7 +183,7 @@ function setup() {
     {
       id: "q7",
       type: "padding",
-      prompt: "You have a 25-minute break after a long session.",
+      prompt: "You have a 15-minute break after an intense session.",
       imgId: "q7",
       choices: ["Let's all go for a walk and get a snack!", "Lemme reset my brain in a calm space"]
     },
@@ -182,14 +199,14 @@ function setup() {
       type: "scoring",
       prompt: "Something's not working and you don't know why. Do you...",
       imgId: "q9",
-      choices: ["Google an answer immediately", "Sit and think it through first"]
+      choices: ["Google it immediately", "Sit and think it through first"]
     },
     {
       id: "q10",
       type: "scoring",
-      prompt: "A new project brief just dropped. Do you...",
+      prompt: "New project brief just dropped. Do you...",
       imgId: "q10",
-      choices: ["Start fantasizing ideas right away", "Read the brief 3 times and make a timeline first"]
+      choices: ["Start sketching ideas right away", "Read the brief 3 times and make a timeline first"]
     }
   ];
 }
@@ -400,13 +417,200 @@ function drawResultScreen() {
   // Visit Website button
   drawButton(cx, visitBtnY, cw, btnH, "Visit the website!", isTouching(cx, visitBtnY, cw, btnH));
   
-  // Restart and Share buttons
+  // All Tools and Share buttons
   const half = (cw - btnGap) / 2;
-  drawButton(cx, btnY, half, btnH, "Restart", isTouching(cx, btnY, half, btnH));
+  drawButton(cx, btnY, half, btnH, "All Tools", isTouching(cx, btnY, half, btnH));
   drawButton(cx + half + btnGap, btnY, half, btnH, "Share", isTouching(cx + half + btnGap, btnY, half, btnH));
+  
+  // Draw gallery modal on top if open
+  if (showGallery) {
+    drawGalleryModal();
+  }
+}
+
+/* ---------------- GALLERY MODAL ---------------- */
+
+function drawGalleryModal() {
+  // Semi-transparent backdrop
+  fill(0, 0, 0, 200);
+  noStroke();
+  rect(0, 0, width, height);
+  
+  const modalW = min(width - 40, 600);
+  const modalH = height - 80;
+  const modalX = (width - modalW) / 2;
+  const modalY = 40;
+  
+  // If viewing a specific character
+  if (galleryViewChar) {
+    drawGalleryCharacterView(modalX, modalY, modalW, modalH);
+  } else {
+    drawGalleryGrid(modalX, modalY, modalW, modalH);
+  }
+}
+
+function drawGalleryGrid(x, y, w, h) {
+  // White modal background
+  fill(255);
+  noStroke();
+  rect(x, y, w, h, 16);
+  
+  // Close button (X)
+  const closeSize = 40;
+  const closeX = x + w - closeSize - 10;
+  const closeY = y + 10;
+  
+  if (isTouching(closeX, closeY, closeSize, closeSize)) {
+    fill(240);
+    circle(closeX + closeSize/2, closeY + closeSize/2, closeSize);
+  }
+  
+  fill(100);
+  textSize(28);
+  textStyle(NORMAL);
+  text("×", closeX + closeSize/2, closeY + closeSize/2);
+  
+  // Title
+  fill(20);
+  textSize(22);
+  textStyle(NORMAL);
+  textAlign(CENTER);
+  text("All Tools", x + w/2, y + 50);
+  
+  // Grid of thumbnails (3 columns, 4 rows)
+  const gridStartY = y + 90;
+  const gridPad = 12;
+  const cols = 3;
+  const rows = 4;
+  const thumbW = (w - gridPad * (cols + 1)) / cols;
+  const thumbH = thumbW * 1.33; // Aspect ratio
+  
+  const tools = ["hammer", "calipers", "vr", "mouse", "mat", "glue", "sewing", "tape", "notepad", "coffee", "ruler"];
+  
+  for (let i = 0; i < tools.length; i++) {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const thumbX = x + gridPad + col * (thumbW + gridPad);
+    const thumbY = gridStartY + row * (thumbH + gridPad);
+    
+    // Thumbnail image
+    const thumb = RESULT_IMAGES[tools[i] + "_thumb"];
+    if (thumb) {
+      imageMode(CORNER);
+      image(thumb, thumbX, thumbY, thumbW, thumbH);
+    } else {
+      // Placeholder
+      fill(240);
+      noStroke();
+      rect(thumbX, thumbY, thumbW, thumbH, 8);
+      fill(150);
+      textSize(12);
+      text(tools[i], thumbX + thumbW/2, thumbY + thumbH/2);
+    }
+    
+    // Hover effect
+    if (isTouching(thumbX, thumbY, thumbW, thumbH)) {
+      noFill();
+      stroke(122, 0, 219); // Purple
+      strokeWeight(3);
+      rect(thumbX, thumbY, thumbW, thumbH, 8);
+    }
+  }
+}
+
+function drawGalleryCharacterView(x, y, w, h) {
+  // White modal background
+  fill(255);
+  noStroke();
+  rect(x, y, w, h, 16);
+  
+  // Back button
+  const backSize = 40;
+  const backX = x + 10;
+  const backY = y + 10;
+  
+  if (isTouching(backX, backY, backSize + 40, backSize)) {
+    fill(240);
+    rect(backX, backY, backSize + 40, backSize, 20);
+  }
+  
+  fill(100);
+  textSize(20);
+  textAlign(LEFT, CENTER);
+  text("← Back", backX + 10, backY + backSize/2);
+  
+  // Character name
+  fill(20);
+  textSize(22);
+  textAlign(CENTER);
+  text(CHARACTERS[galleryViewChar], x + w/2, y + 60);
+  
+  // Character image
+  const imgTop = y + 100;
+  const imgH = h - 140;
+  const res = RESULT_IMAGES[galleryViewChar];
+  
+  if (res) {
+    const fitted = fitRect(res.width, res.height, w - 40, imgH);
+    imageMode(CORNER);
+    image(res, x + 20 + fitted.x, imgTop + fitted.y, fitted.w, fitted.h);
+  }
 }
 
 /* ---------------- INTERACTION ---------------- */
+
+function handleGalleryTap(px, py) {
+  const modalW = min(width - 40, 600);
+  const modalH = height - 80;
+  const modalX = (width - modalW) / 2;
+  const modalY = 40;
+  
+  // Viewing specific character
+  if (galleryViewChar) {
+    // Back button
+    const backSize = 40;
+    const backX = modalX + 10;
+    const backY = modalY + 10;
+    
+    if (hit(px, py, backX, backY, backSize + 40, backSize)) {
+      galleryViewChar = null; // Back to grid
+      return;
+    }
+    return;
+  }
+  
+  // In grid view
+  // Close button (X)
+  const closeSize = 40;
+  const closeX = modalX + modalW - closeSize - 10;
+  const closeY = modalY + 10;
+  
+  if (hit(px, py, closeX, closeY, closeSize, closeSize)) {
+    showGallery = false;
+    return;
+  }
+  
+  // Check thumbnail grid
+  const gridStartY = modalY + 90;
+  const gridPad = 12;
+  const cols = 3;
+  const thumbW = (modalW - gridPad * (cols + 1)) / cols;
+  const thumbH = thumbW * 1.33;
+  
+  const tools = ["hammer", "calipers", "vr", "mouse", "mat", "glue", "sewing", "tape", "notepad", "coffee", "ruler"];
+  
+  for (let i = 0; i < tools.length; i++) {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const thumbX = modalX + gridPad + col * (thumbW + gridPad);
+    const thumbY = gridStartY + row * (thumbH + gridPad);
+    
+    if (hit(px, py, thumbX, thumbY, thumbW, thumbH)) {
+      galleryViewChar = tools[i]; // Open this character
+      return;
+    }
+  }
+}
 
 function mousePressed() {
   handleTap(mouseX, mouseY);
@@ -447,19 +651,29 @@ function handleTap(px, py) {
   }
 
   if (appState === "result") {
+    // If gallery is open, handle gallery interactions
+    if (showGallery) {
+      handleGalleryTap(px, py);
+      return;
+    }
+    
     const btnY = height - pad - btnH;
     const half = (cw - btnGap) / 2;
     const visitBtnY = height - pad - btnH * 2 - btnGap;
   
+    // Check All Tools button (replaced Restart)
     if (hit(px, py, cx, btnY, half, btnH)) {
-      restartQuiz();
+      showGallery = true;
+      galleryViewChar = null; // Show grid first
       return;
     }
+    // Check Share button
     if (hit(px, py, cx + half + btnGap, btnY, half, btnH)) {
       shareResult();
       return;
     }
     
+    // Check Visit Website button
     if (hit(px, py, cx, visitBtnY, cw, btnH)) {
       window.location.href = "https://vina-setiawaty.github.io/Gradwebsite-2026/loading.html";
       return;
@@ -525,25 +739,23 @@ function shareResult() {
   const text = `I am ${CHARACTERS[character]} on the DID Grad Show 2026 Quiz!`;
   const shareUrl = window.location.href;
 
-  // Direct Telegram share URL - works in all Telegram browsers
-  const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(text)}`;
-  
-  // Try to open in same window (stays in Telegram)
-  try {
-    window.location.href = telegramShareUrl;
-  } catch (e) {
-    // Fallback: Web Share API
-    if (navigator.share) {
-      navigator.share({
-        title: "What Tool Are You!",
-        text: text,
-        url: shareUrl
-      }).catch(() => {
+  // Use Web Share API - automatically detects the app/browser
+  if (navigator.share) {
+    navigator.share({
+      title: "What Tool Are You?",
+      text: text,
+      url: shareUrl
+    })
+    .then(() => console.log('Shared successfully'))
+    .catch((error) => {
+      // User cancelled or error - fallback to copy
+      if (error.name !== 'AbortError') {
         copyToClipboard(text);
-      });
-    } else {
-      copyToClipboard(text);
-    }
+      }
+    });
+  } else {
+    // Fallback for browsers without Web Share API
+    copyToClipboard(text);
   }
 }
 
