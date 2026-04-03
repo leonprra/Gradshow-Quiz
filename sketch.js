@@ -473,24 +473,29 @@ function drawGalleryGrid(x, y, w, h) {
   textStyle(NORMAL);
   text("×", closeX + closeSize/2, closeY + closeSize/2);
   
-  // Title
-  fill(20);
-  textSize(22);
-  textStyle(NORMAL);
-  textAlign(CENTER);
-  text("All Tools", x + w/2, y + 50);
-  
-  // Responsive grid: 4 cols on desktop (wide), 3 cols on mobile
-  const gridStartY = y + 90;
+  // Grid starts right after close button (removed title)
+  const gridStartY = y + 60; // Less space at top
   const gridPad = 12;
-  const cols = width > 600 ? 4 : 3; // 4 columns if wide, 3 if narrow
-  const rows = width > 600 ? 3 : 4; // 3 rows if wide, 4 if narrow
+  const cols = width > 600 ? 4 : 3;
   
+  // Calculate available space for grid
   const availableW = w - gridPad * (cols + 1);
-  const availableH = h - gridStartY + y - gridPad;
+  const availableH = h - (gridStartY - y) - gridPad * 2;
   
-  const thumbW = availableW / cols;
-  const thumbH = thumbW * 1.33; // Aspect ratio
+  // Calculate thumbnail size based on available space
+  const thumbWFromWidth = availableW / cols;
+  const rows = width > 600 ? 3 : 4;
+  const thumbHFromHeight = availableH / rows;
+  
+  // Use the smaller dimension to ensure everything fits
+  let thumbW = thumbWFromWidth;
+  let thumbH = thumbW * 1.33; // Maintain aspect ratio
+  
+  // If height doesn't fit, recalculate based on height
+  if (thumbH * rows + gridPad * (rows - 1) > availableH) {
+    thumbH = thumbHFromHeight;
+    thumbW = thumbH / 1.33;
+  }
   
   const tools = ["hammer", "calipers", "vr", "mouse", "mat", "glue", "sewing", "tape", "notepad", "coffee", "ruler", "thumb"];
   
@@ -546,15 +551,9 @@ function drawGalleryCharacterView(x, y, w, h) {
   textAlign(LEFT, CENTER);
   text("← Back", backX + 10, backY + backSize/2);
   
-  // Character name
-  fill(20);
-  textSize(22);
-  textAlign(CENTER);
-  text(CHARACTERS[galleryViewChar], x + w/2, y + 60);
-  
-  // Character image
-  const imgTop = y + 100;
-  const imgH = h - 140;
+  // Character image (name removed, starts higher)
+  const imgTop = y + 70; // Starts right after back button
+  const imgH = h - 90; // More space for image
   const res = RESULT_IMAGES[galleryViewChar];
   
   if (res) {
@@ -598,13 +597,25 @@ function handleGalleryTap(px, py) {
   }
   
   // Check thumbnail grid
-  const gridStartY = modalY + 90;
+  const gridStartY = modalY + 60; // Match drawGalleryGrid
   const gridPad = 12;
-  const cols = width > 600 ? 4 : 3; // Match drawGalleryGrid
+  const cols = width > 600 ? 4 : 3;
   
+  // Calculate same way as drawGalleryGrid
   const availableW = modalW - gridPad * (cols + 1);
-  const thumbW = availableW / cols;
-  const thumbH = thumbW * 1.33;
+  const availableH = modalH - 60 - gridPad * 2;
+  
+  const thumbWFromWidth = availableW / cols;
+  const rows = width > 600 ? 3 : 4;
+  const thumbHFromHeight = availableH / rows;
+  
+  let thumbW = thumbWFromWidth;
+  let thumbH = thumbW * 1.33;
+  
+  if (thumbH * rows + gridPad * (rows - 1) > availableH) {
+    thumbH = thumbHFromHeight;
+    thumbW = thumbH / 1.33;
+  }
   
   const tools = ["hammer", "calipers", "vr", "mouse", "mat", "glue", "sewing", "tape", "notepad", "coffee", "ruler", "thumb"];
   
