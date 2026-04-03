@@ -682,4 +682,464 @@ function handleTap(px, py) {
 
   if (appState === "start") {
     const btnY = height - pad - btnH;
-    if (hit(px,
+    if (hit(px, py, cx, btnY, cw, btnH)) {
+      appState = "preparing";
+      time = millis();
+      idx = 0;
+    }
+    return;
+  }
+
+  if (appState === "calculating") {
+    const btnY = height - pad - btnH;
+    if (millis() - time >= wait && hit(px, py, cx, btnY, cw, btnH)) {
+      appState = "result";
+    }
+    return;
+  }
+
+  if (appState === "result") {
+    // If gallery is open, handle gallery interactions
+    if (showGallery) {
+      handleGalleryTap(px, py);
+      return;
+    }
+    
+    const btnY = height - pad - btnH;
+    const half = (cw - btnGap) / 2;
+    const visitBtnY = height - pad - btnH * 2 - btnGap;
+  
+    // Check All Tools button (replaced Restart)
+    if (hit(px, py, cx, btnY, half, btnH)) {
+      showGallery = true;
+      galleryViewChar = null; // Show grid first
+      return;
+    }
+    // Check Share button
+    if (hit(px, py, cx + half + btnGap, btnY, half, btnH)) {
+      shareResult();
+      return;
+    }
+    
+    // Check Visit Website button
+    if (hit(px, py, cx, visitBtnY, cw, btnH)) {
+      window.location.href = "https://vina-setiawaty.github.io/Gradwebsite-2026/loading.html";
+      return;
+    }
+    return;
+  }
+
+  if (appState === "quiz") {
+    const btnY1 = height - pad - btnH * 3 - btnGap * 2;
+    const btnY2 = height - pad - btnH * 2 - btnGap;
+    const confirmY = height - pad - btnH;
+    
+    const confirmBtnWidth = 200;
+    const confirmX = cx + (cw - confirmBtnWidth) / 2;
+
+    if (hit(px, py, cx, btnY1, cw, btnH)) {
+      selectedChoice = 0;
+      return;
+    }
+    
+    if (hit(px, py, cx, btnY2, cw, btnH)) {
+      selectedChoice = 1;
+      return;
+    }
+    
+    if (hit(px, py, confirmX, confirmY, confirmBtnWidth, btnH)) {
+      if (selectedChoice !== null) {
+        answerQuestion(selectedChoice);
+      }
+      return;
+    }
+  }
+}
+
+function answerQuestion(choice) {
+  locked = true;
+  answers.push(choice); // Store all answers
+  
+  isTransitioning = true;
+  
+  setTimeout(() => {
+    currentIdx++;
+    selectedChoice = null;
+    isTransitioning = false;
+    locked = false;
+  }, 400);
+}
+
+function restartQuiz() {
+  currentIdx = 0;
+  answers = [];
+  selectedChoice = null;
+  appState = "start";
+  questionAlpha = 255;
+  questionScale = 1.0;
+  isTransitioning = false;
+}
+
+/* ---------------- SHARE ---------------- */
+
+function shareResult() {
+  const character = getCharacter();
+  const text = `I am ${CHARACTERS[character]} on the DID Grad Show 2026 Quiz!`;
+  const shareUrl = window.location.href;
+
+  // Use Web Share API - automatically detects the app/browser
+  if (navigator.share) {
+    navigator.share({
+      title: "What Tool Are You?",
+      text: text,
+      url: shareUrl
+    })
+    .then(() => console.log('Shared successfully'))
+    .catch((error) => {
+      // User cancelled or error - fallback to copy
+      if (error.name !== 'AbortError') {
+        copyToClipboard(text);
+      }
+    });
+  } else {
+    // Fallback for browsers without Web Share API
+    copyToClipboard(text);
+  }
+}
+
+function copyToClipboard(text) {
+  const fullText = text + " " + window.location.href;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(fullText)
+      .then(() => alert("Result copied to clipboard!"))
+      .catch(() => alert(fullText));
+  } else {
+    alert(fullText);
+  }
+}
+
+/* ---------------- CHARACTER SCORING SYSTEM ---------------- */
+
+function getCharacter() {
+  let scores = {
+    hammer: 0,
+    calipers: 0,
+    vr: 0,
+    mouse: 0,
+    mat: 0,
+    glue: 0,
+    sewing: 0,
+    tape: 0,
+    notepad: 0,
+    coffee: 0,
+    ruler: 0,
+    thumb: 0
+  };
+  
+  // Q1: Wake up (padding)
+  if (answers[0] === 0) { // Sleep in
+    scores.coffee += 1;
+    scores.notepad += 1;
+    scores.tape += 1;
+  } else { // Rise and grind
+    scores.ruler += 1;
+    scores.calipers += 1;
+    scores.mouse += 1;
+    scores.vr += 2;
+  }
+  
+  // Q2: Dressed (padding)
+  if (answers[1] === 0) { // Casual
+    scores.tape += 1;
+    scores.hammer += 1;
+    scores.coffee += 1;
+  } else { // Dressed up
+    scores.ruler += 1;
+    scores.sewing += 1;
+    scores.calipers += 1;
+  }
+  
+  // Q3: Bus delayed (SCORING) - USB gets high score for "update the group"
+  if (answers[2] === 0) { // Take route and UPDATE THE GROUP
+    scores.ruler += 3;
+    scores.thumb += 3; // USB Drive: connector, shares info
+    scores.mouse += 2;
+    scores.calipers += 2;
+    scores.vr += 1;
+  } else { // Buy snacks
+    scores.coffee += 3;
+    scores.glue += 2;
+    scores.tape += 2;
+    scores.mat += 1;
+  }
+  
+  // Q4: Desk mess (SCORING)
+  if (answers[3] === 0) { // Carve space
+    scores.tape += 3;
+    scores.hammer += 2;
+    scores.glue += 2;
+    scores.mouse += 1;
+  } else { // Reset table
+    scores.ruler += 3;
+    scores.mat += 2;
+    scores.sewing += 2;
+    scores.calipers += 1;
+    scores.thumb += 1; // Organized, systematic
+  }
+  
+  // Q5: Deskmate stuck (SCORING)
+  if (answers[4] === 0) { // What's not working?
+    scores.notepad += 3;
+    scores.mouse += 2;
+    scores.calipers += 2;
+    scores.sewing += 1;
+  } else { // Coffee break!
+    scores.coffee += 3;
+    scores.vr += 2;
+    scores.glue += 2;
+    scores.hammer += 1;
+  }
+  
+  // Q6: Deadline (SCORING)
+  if (answers[5] === 0) { // Send it
+    scores.hammer += 3;
+    scores.tape += 2;
+    scores.mouse += 2;
+    scores.glue += 1;
+  } else { // Keep tweaking
+    scores.sewing += 3;
+    scores.calipers += 2;
+    scores.ruler += 2;
+    scores.notepad += 1;
+  }
+  
+  // Q7: Break time (padding)
+  if (answers[6] === 0) { // Walk/snack
+    scores.coffee += 1;
+    scores.glue += 1;
+    scores.mat += 1;
+  } else { // Calm space
+    scores.notepad += 1;
+    scores.vr += 2;
+    scores.calipers += 1;
+  }
+  
+  // Q8: Beauty moment (SCORING)
+  if (answers[7] === 0) { // Capture it - USB: saves/stores moments
+    scores.notepad += 3;
+    scores.thumb += 2; // USB: backs up, preserves
+    scores.mouse += 2;
+    scores.calipers += 1;
+    scores.mat += 1;
+  } else { // Just enjoy
+    scores.coffee += 3;
+    scores.vr += 2;
+    scores.sewing += 1;
+    scores.hammer += 1;
+  }
+  
+  // Q9: Something not working (SCORING)
+  if (answers[8] === 0) { // Google it
+    scores.mouse += 3;
+    scores.vr += 2;
+    scores.hammer += 2;
+    scores.tape += 1;
+  } else { // Think it through
+    scores.notepad += 3;
+    scores.calipers += 2;
+    scores.ruler += 2;
+    scores.sewing += 1;
+  }
+  
+  // Q10: New project brief (SCORING)
+  if (answers[9] === 0) { // Start sketching
+    scores.hammer += 3;
+    scores.tape += 2;
+    scores.vr += 2;
+    scores.glue += 1;
+  } else { // Read & timeline - USB: systematic, shares plan
+    scores.ruler += 3;
+    scores.mat += 2;
+    scores.thumb += 2; // USB: organizes, distributes info
+    scores.calipers += 2;
+    scores.notepad += 1;
+  }
+  
+  // Find winner
+  let maxScore = 0;
+  let winner = 'hammer';
+  
+  for (let char in scores) {
+    if (scores[char] > maxScore) {
+      maxScore = scores[char];
+      winner = char;
+    }
+  }
+  
+  return winner;
+}
+
+/* ---------------- DRAWING HELPERS ---------------- */
+
+function drawQuestionScreen(q) {
+  const cw = contentWidth();
+  const cx = contentX();
+
+  push();
+  translate(width / 2, height / 2);
+  scale(questionScale);
+  translate(-width / 2, -height / 2);
+
+  textSize(15);
+  fill(20, questionAlpha);
+  text(`Q ${currentIdx + 1} / ${QUESTIONS.length}`, width / 2, pad + 12);
+
+  fill(74, 0, 162, questionAlpha);
+  const promptSize = constrain(floor(contentWidth() / 19), 14, 18);
+  textSize(promptSize);
+  textWrap(WORD);
+  text(q.prompt, cx, pad + 60, cw);
+
+  push();
+  tint(255, questionAlpha);
+  const imgTop = pad + 155;
+
+  const btnY1 = height - pad - btnH * 3 - btnGap * 2;
+  const minGap = 24;
+  const maxImgHeight = btnY1 - imgTop - minGap;
+  const imgH = min(height * 0.50, maxImgHeight);
+
+  drawMediaFrame(q.imgId, cx, imgTop, cw, imgH);
+  pop();
+
+  const btnY2 = height - pad - btnH * 2 - btnGap;
+  
+  const isSelected0 = selectedChoice === 0;
+  const isSelected1 = selectedChoice === 1;
+  
+  drawChoiceButton(cx, btnY1, cw, btnH, q.choices[0], 
+    isTouching(cx, btnY1, cw, btnH), isSelected0, questionAlpha);
+  drawChoiceButton(cx, btnY2, cw, btnH, q.choices[1], 
+    isTouching(cx, btnY2, cw, btnH), isSelected1, questionAlpha);
+  
+  pop();
+
+  const confirmY = height - pad - btnH;
+  const canConfirm = selectedChoice !== null;
+  
+  const confirmBtnWidth = 200;
+  const confirmX = cx + (cw - confirmBtnWidth) / 2;
+  
+  drawConfirmButton(confirmX, confirmY, confirmBtnWidth, btnH, "Confirm", 
+    isTouching(confirmX, confirmY, confirmBtnWidth, btnH), canConfirm);
+}
+
+function drawMediaFrame(imgId, x, y, w, h) {
+  noFill();
+  noStroke();
+
+  const media = QIMG[imgId];
+  if (!media) {
+    noStroke();
+    fill(245, questionAlpha);
+    rect(x, y, w, h, 8);
+    fill(140, questionAlpha);
+    textSize(14);
+    text("Image placeholder", x + w / 2, y + h / 2);
+    return;
+  }
+
+  const f = fitRect(media.width, media.height, w, h);
+  image(media, x + f.x, y + f.y, f.w, f.h);
+}
+
+function drawButton(x, y, w, h, label, hot) {
+  fill(hot ? "#DABBFF" : "#EEE0FF");
+  noStroke();
+  rect(x+44, y, w-88, h, 18);
+  
+  fill(hot ? 250 : 20);
+  textSize(hot ? 17 : 16);
+  text(label, x + w / 2, y + h / 2);
+}
+
+function drawChoiceButton(x, y, w, h, label, hot, isSelected, alpha) {
+  if (isSelected) {
+    fill(218, 187, 255, alpha);
+    stroke(174, 135, 231, alpha);
+    strokeWeight(2); 
+    rect(x+22, y, w-44, h, 10);
+  } else {
+    if (hot) {
+      fill(218, 187, 255, alpha);
+    } else {
+      fill(174, 135, 231, alpha);
+    }
+    noStroke();
+    rect(x+20, y, w-40, h, 10);
+  }
+  
+  noStroke();
+  if (isSelected) {
+    fill(174, 135, 231, alpha);
+  } else if (hot) {
+    fill(247, 239, 255, alpha);
+  } else {
+    fill(250, alpha);
+  }
+  textSize(isSelected ? 15 : (hot ? 16 : 15));
+  text(label, x + w / 2, y + h / 2);
+}
+
+function drawConfirmButton(x, y, w, h, label, hot, enabled) {
+  const confirmBtnWidth = 150;
+  const confirmX = width/2;
+  
+  if (enabled) {
+    fill(hot ? "#FFC107" : "#7a00db");
+  } else {
+    fill("#EAEAEA");
+  }
+  
+  noStroke();
+  ellipse(confirmX, y+h/2, confirmBtnWidth, h); 
+  
+  fill(enabled ? 255 : 150);
+  textSize(17);
+  textStyle(BOLD);
+  text(label, confirmX, y + h / 2);
+  textStyle(NORMAL);
+}
+
+function contentWidth() {
+  return min(width - pad * 2, MAX_CONTENT_W);
+}
+
+function contentX() {
+  return (width - contentWidth()) / 2;
+}
+
+function hit(px, py, x, y, w, h) {
+  return px >= x && px <= x + w && py >= y && py <= y + h;
+}
+
+function isTouching(x, y, w, h) {
+  return hit(mouseX, mouseY, x, y, w, h);
+}
+
+function fitRect(sw, sh, dw, dh) {
+  const s = min(dw / sw, dh / sh);
+  return { 
+    w: sw * s, 
+    h: sh * s, 
+    x: (dw - sw * s) / 2, 
+    y: (dh - sh * s) / 2 
+  };
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+  setTimeout(() => {
+    window.scrollTo(0, 0);
+  }, 100);
+}
