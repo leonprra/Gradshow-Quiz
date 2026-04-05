@@ -607,11 +607,11 @@ function drawGalleryCharacterView(x, y, w, h) {
   
   fill(100);
   textSize(20);
-  textAlign(LEFT, CENTER);
+  //textAlign(LEFT, CENTER);
   text("← Back", backX + 10, backY + backSize/2);
   
   // Character image (name removed, starts higher)
-  const imgTop = y + 70; // Starts right after back button
+  const imgTop = y + 52; // Starts right after back button
   const imgH = h - 90; // More space for image
   const res = RESULT_IMAGES[galleryViewChar];
   
