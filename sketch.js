@@ -354,7 +354,7 @@ function drawPreparingScreen() {
   if (millis() - time >= preparingWait) {
     text("Let's go!", width / 2, height / 2 - 40);
   } else {
-    text("Preparing your quiz...", width / 2, height / 2 - 40);
+    text("Transporting you to design school!!!", width / 2, height / 2 - 40);
   }
 
   textSize(14);
@@ -426,7 +426,7 @@ function drawResultScreen() {
     const rightColX = width - rightColW - pad;
     const imgAreaX = pad;
     const imgAreaY = pad;
-    const imgAreaW = rightColX - pad * 2;
+    const imgAreaW = rightColX - pad - 8;
     const imgAreaH = height - pad * 2;
 
     // Result image — full left-side height
@@ -1033,12 +1033,12 @@ function drawQuestionScreen(q) {
 
   push();
   tint(255, questionAlpha);
-  const imgTop = pad + 155;
+  const imgTop = pad + 120;
 
   const btnY1 = height - pad - btnH * 3 - btnGap * 2;
   const minGap = 24;
   const maxImgHeight = btnY1 - imgTop - minGap;
-  const imgH = min(height * 0.50, maxImgHeight);
+  const imgH = min(height * 0.60, maxImgHeight);
 
   drawMediaFrame(q.imgId, cx, imgTop, cw, imgH);
   pop();
