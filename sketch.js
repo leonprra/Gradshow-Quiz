@@ -1,5 +1,5 @@
 /*
-Mobile-friendly 7-question quiz (p5.js)
+Mobile-friendly 10-question quiz (p5.js)
 Optimized for Telegram, iOS, Android
 Screens: Start > Quiz > Calculating > Result
 WITH SIMPLE FADE
@@ -418,45 +418,76 @@ function drawResultScreen() {
   const cw = contentWidth();
   const cx = contentX();
   const character = getCharacter();
+  const isLandscape = width > height;
 
-  // Calculate button positions
-  const visitBtnY = height - pad - btnH * 2 - btnGap;
-  const btnY = height - pad - btnH;
-  
-  // Calculate image area (from top to button with padding)
-  const imgPadding = 24; // padding above button
-  const imgTop = pad + 20;
-  const imgBottom = visitBtnY - imgPadding;
-  const availableHeight = imgBottom - imgTop;
-  
-  // Use full available height
-  const res = RESULT_IMAGES[character];
-  if (res) {
-    // Fit image to available space (maintaining aspect ratio)
-    const fitted = fitRect(res.width, res.height, cw, availableHeight);
-    imageMode(CORNER);
-    image(res, cx + fitted.x, imgTop + fitted.y, fitted.w, fitted.h);
+  if (isLandscape) {
+    // ── Desktop layout: image left, buttons stacked right ──
+    const rightColW = min(240, width * 0.28);
+    const rightColX = width - rightColW - pad;
+    const imgAreaX = pad;
+    const imgAreaY = pad;
+    const imgAreaW = rightColX - pad * 2;
+    const imgAreaH = height - pad * 2;
+
+    // Result image — full left-side height
+    const res = RESULT_IMAGES[character];
+    if (res) {
+      const fitted = fitRect(res.width, res.height, imgAreaW, imgAreaH);
+      imageMode(CORNER);
+      image(res, imgAreaX + fitted.x, imgAreaY + fitted.y, fitted.w, fitted.h);
+    } else {
+      noStroke();
+      fill(245);
+      rect(imgAreaX, imgAreaY, imgAreaW, imgAreaH, 16);
+      fill(140);
+      textSize(14);
+      text("Result image here", imgAreaX + imgAreaW / 2, imgAreaY + imgAreaH / 2);
+    }
+
+    // Three buttons vertically centred in right column
+    const totalBtnH = btnH * 3 + btnGap * 2;
+    const btnStartY = (height - totalBtnH) / 2;
+
+    const visitBtnY   = btnStartY;
+    const allToolsBtnY = btnStartY + btnH + btnGap;
+    const shareBtnY   = btnStartY + (btnH + btnGap) * 2;
+
+    drawButton(rightColX, visitBtnY,    rightColW, btnH, "Visit the website!", isTouching(rightColX, visitBtnY,    rightColW, btnH));
+    drawButton(rightColX, allToolsBtnY, rightColW, btnH, "All Tools",          isTouching(rightColX, allToolsBtnY, rightColW, btnH));
+    drawButton(rightColX, shareBtnY,    rightColW, btnH, "Share",              isTouching(rightColX, shareBtnY,    rightColW, btnH));
+
   } else {
-    noStroke();
-    fill(245);
-    rect(cx, imgTop, cw, availableHeight, 16);
-    fill(140);
-    textSize(14);
-    text("Result image here", width / 2, imgTop + availableHeight / 2);
+    // ── Portrait layout (unchanged) ──
+    const visitBtnY = height - pad - btnH * 2 - btnGap;
+    const btnY      = height - pad - btnH;
+
+    const imgPadding = 24;
+    const imgTop     = pad + 20;
+    const imgBottom  = visitBtnY - imgPadding;
+    const availH     = imgBottom - imgTop;
+
+    const res = RESULT_IMAGES[character];
+    if (res) {
+      const fitted = fitRect(res.width, res.height, cw, availH);
+      imageMode(CORNER);
+      image(res, cx + fitted.x, imgTop + fitted.y, fitted.w, fitted.h);
+    } else {
+      noStroke();
+      fill(245);
+      rect(cx, imgTop, cw, availH, 16);
+      fill(140);
+      textSize(14);
+      text("Result image here", width / 2, imgTop + availH / 2);
+    }
+
+    drawButton(cx, visitBtnY, cw, btnH, "Visit the website!", isTouching(cx, visitBtnY, cw, btnH));
+
+    const half = (cw - btnGap) / 2;
+    drawButton(cx,              btnY, half, btnH, "All Tools", isTouching(cx,              btnY, half, btnH));
+    drawButton(cx + half + btnGap, btnY, half, btnH, "Share",     isTouching(cx + half + btnGap, btnY, half, btnH));
   }
 
-  // Visit Website button
-  drawButton(cx, visitBtnY, cw, btnH, "Visit the website!", isTouching(cx, visitBtnY, cw, btnH));
-  
-  // All Tools and Share buttons
-  const half = (cw - btnGap) / 2;
-  drawButton(cx, btnY, half, btnH, "All Tools", isTouching(cx, btnY, half, btnH));
-  drawButton(cx + half + btnGap, btnY, half, btnH, "Share", isTouching(cx + half + btnGap, btnY, half, btnH));
-  
-  // Draw gallery modal on top if open
-  if (showGallery) {
-    drawGalleryModal();
-  }
+  if (showGallery) drawGalleryModal();
 }
 
 /* ---------------- GALLERY MODAL ---------------- */
@@ -699,32 +730,32 @@ function handleTap(px, py) {
   }
 
   if (appState === "result") {
-    // If gallery is open, handle gallery interactions
-    if (showGallery) {
-      handleGalleryTap(px, py);
-      return;
-    }
-    
-    const btnY = height - pad - btnH;
-    const half = (cw - btnGap) / 2;
-    const visitBtnY = height - pad - btnH * 2 - btnGap;
-  
-    // Check All Tools button (replaced Restart)
-    if (hit(px, py, cx, btnY, half, btnH)) {
-      showGallery = true;
-      galleryViewChar = null; // Show grid first
-      return;
-    }
-    // Check Share button
-    if (hit(px, py, cx + half + btnGap, btnY, half, btnH)) {
-      shareResult();
-      return;
-    }
-    
-    // Check Visit Website button
-    if (hit(px, py, cx, visitBtnY, cw, btnH)) {
-      window.location.href = "https://vina-setiawaty.github.io/Gradwebsite-2026/loading.html";
-      return;
+    if (showGallery) { handleGalleryTap(px, py); return; }
+
+    const isLandscape = width > height;
+
+    if (isLandscape) {
+      const rightColW  = min(240, width * 0.28);
+      const rightColX  = width - rightColW - pad;
+      const totalBtnH  = btnH * 3 + btnGap * 2;
+      const btnStartY  = (height - totalBtnH) / 2;
+
+      const visitBtnY    = btnStartY;
+      const allToolsBtnY = btnStartY + btnH + btnGap;
+      const shareBtnY    = btnStartY + (btnH + btnGap) * 2;
+
+      if (hit(px, py, rightColX, visitBtnY,    rightColW, btnH)) { window.location.href = "https://vina-setiawaty.github.io/Gradwebsite-2026/loading.html"; return; }
+      if (hit(px, py, rightColX, allToolsBtnY, rightColW, btnH)) { showGallery = true; galleryViewChar = null; return; }
+      if (hit(px, py, rightColX, shareBtnY,    rightColW, btnH)) { shareResult(); return; }
+
+    } else {
+      const btnY      = height - pad - btnH;
+      const visitBtnY = height - pad - btnH * 2 - btnGap;
+      const half      = (cw - btnGap) / 2;
+
+      if (hit(px, py, cx, visitBtnY, cw, btnH))              { window.location.href = "https://vina-setiawaty.github.io/Gradwebsite-2026/loading.html"; return; }
+      if (hit(px, py, cx, btnY, half, btnH))                 { showGallery = true; galleryViewChar = null; return; }
+      if (hit(px, py, cx + half + btnGap, btnY, half, btnH)) { shareResult(); return; }
     }
     return;
   }
