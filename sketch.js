@@ -352,7 +352,7 @@ function drawPreparingScreen() {
   const cw = contentWidth();
   const cx = contentX();
 
-  textSize(22);
+  textSize(22); // Heading size from design
   fill("#1A0F22"); // Ink-900
   textStyle(BOLD);
   if (millis() - time >= preparingWait) {
@@ -362,7 +362,7 @@ function drawPreparingScreen() {
   }
   textStyle(NORMAL);
 
-  textSize(14);
+  textSize(15); // Small text from design
   fill("#6B5A73"); // Text muted
   if (millis() - lastSwap > swapMs) {
     idx = (idx + 1) % preparing.length;
@@ -394,8 +394,8 @@ function drawCalculatingScreen() {
   const cw = contentWidth();
   const cx = contentX();
 
-  textSize(22);
-  fill("#1A0F22"); // Ink-900
+  textSize(22); // Heading size
+  fill("#1A0F22");
   textStyle(BOLD);
   if (millis() - time >= wait) {
     text("Done!", width / 2, height / 2 - 40);
@@ -404,8 +404,8 @@ function drawCalculatingScreen() {
   }
   textStyle(NORMAL);
 
-  textSize(14);
-  fill("#6B5A73"); // Text muted
+  textSize(15);
+  fill("#6B5A73");
   if (millis() - lastSwap > swapMs) {
     idx = (idx + 1) % calc.length;
     lastSwap = millis();
@@ -538,8 +538,8 @@ function drawResultScreenPortrait(character, res) {
 /* ---------------- GALLERY MODAL ---------------- */
 
 function drawGalleryModal() {
-  // Semi-transparent backdrop
-  fill(0, 0, 0, 200);
+  // Semi-transparent backdrop (lighter, matches design)
+  fill(0, 0, 0, 100);
   noStroke();
   rect(0, 0, width, height);
   
@@ -557,27 +557,30 @@ function drawGalleryModal() {
 }
 
 function drawGalleryGrid(x, y, w, h) {
-  // White modal background
-  fill(255);
-  noStroke();
-  rect(x, y, w, h, 16);
+  // Cream modal background with dark border
+  fill("#FAF6F0"); // Cream
+  stroke("#1A0F22"); // Ink-900 border
+  strokeWeight(2);
+  rect(x, y, w, h, 24);
   
   // Close button (X)
+  noStroke();
   const closeSize = 40;
   const closeX = x + w - closeSize - 10;
   const closeY = y + 10;
   
   if (isTouching(closeX, closeY, closeSize, closeSize)) {
-    fill(240);
+    fill("#F4ECFB"); // Purple-100
     circle(closeX + closeSize/2, closeY + closeSize/2, closeSize);
   }
   
-  fill(100);
+  fill("#1A0F22"); // Ink-900
   textSize(28);
   textStyle(NORMAL);
+  textAlign(CENTER, CENTER);
   text("×", closeX + closeSize/2, closeY + closeSize/2);
   
-  // Grid starts right after close button (removed title)
+  // Grid starts right after close button
   const gridStartY = y + 60;
   const gridPad = 12;
   const cols = width > 600 ? 4 : 3;
@@ -591,11 +594,9 @@ function drawGalleryGrid(x, y, w, h) {
   const rows = width > 600 ? 3 : 4;
   const thumbHFromHeight = availableH / rows;
   
-  // Use the smaller dimension to ensure everything fits
   let thumbW = thumbWFromWidth;
   let thumbH = thumbW * 1.33;
   
-  // If height doesn't fit, recalculate based on height
   if (thumbH * rows + gridPad * (rows - 1) > availableH) {
     thumbH = thumbHFromHeight;
     thumbW = thumbH / 1.33;
@@ -618,42 +619,46 @@ function drawGalleryGrid(x, y, w, h) {
       // Placeholder
       fill(240);
       noStroke();
-      rect(thumbX, thumbY, thumbW, thumbH, 8);
+      rect(thumbX, thumbY, thumbW, thumbH, 12);
       fill(150);
       textSize(12);
       text(tools[i], thumbX + thumbW/2, thumbY + thumbH/2);
     }
     
-    // Hover effect
+    // Hover effect - dark ink border
     if (isTouching(thumbX, thumbY, thumbW, thumbH)) {
       noFill();
-      stroke(122, 0, 219);
+      stroke("#1A0F22"); // Ink-900
       strokeWeight(3);
-      rect(thumbX, thumbY, thumbW, thumbH, 8);
+      rect(thumbX, thumbY, thumbW, thumbH, 12);
     }
   }
 }
 
 function drawGalleryCharacterView(x, y, w, h) {
-  // White modal background
-  fill(255);
-  noStroke();
-  rect(x, y, w, h, 16);
+  // Cream modal background with dark border
+  fill("#FAF6F0"); // Cream
+  stroke("#1A0F22"); // Ink-900
+  strokeWeight(2);
+  rect(x, y, w, h, 24);
   
   // Back button
+  noStroke();
   const backSize = 40;
   const backX = x + 10;
   const backY = y + 10;
   
-  if (isTouching(backX, backY, backSize + 40, backSize)) {
-    fill(240);
-    rect(backX, backY, backSize + 40, backSize, 20);
+  if (isTouching(backX, backY, backSize + 60, backSize)) {
+    fill("#F4ECFB"); // Purple-100
+    rect(backX, backY, backSize + 60, backSize, 20);
   }
   
-  fill(100);
-  textSize(20);
+  fill("#1A0F22"); // Ink-900
+  textSize(16);
+  textStyle(BOLD);
   textAlign(LEFT, CENTER);
-  text("← Back", backX + 10, backY + backSize/2);
+  text("← Back", backX + 12, backY + backSize/2);
+  textStyle(NORMAL);
   
   // Character image (name removed, starts higher)
   const imgTop = y + 70;
@@ -1109,11 +1114,15 @@ function drawQuestionScreen(q) {
   scale(questionScale);
   translate(-width / 2, -height / 2);
 
-  textSize(15);
-  fill(26, 15, 34, questionAlpha); // Ink-900
-  text(`Q ${currentIdx + 1} / ${QUESTIONS.length}`, width / 2, pad + 12);
+  // Question counter: "Question 02 of 10"
+  const qNum = String(currentIdx + 1).padStart(2, '0');
+  const qTotal = String(QUESTIONS.length).padStart(2, '0');
+  textSize(13);
+  fill(107, 90, 115, questionAlpha); // Text muted (#6B5A73)
+  textStyle(NORMAL);
+  text(`Question ${qNum} of ${qTotal}`, width / 2, pad + 12);
 
-  fill(122, 0, 219, questionAlpha); // Purple-600
+  fill(26, 15, 34, questionAlpha); // Ink-900 dark text (not purple)
   textStyle(BOLD);
   const promptSize = constrain(floor(contentWidth() / 19), 14, 18);
   textSize(promptSize);
@@ -1157,7 +1166,7 @@ function drawQuestionScreen(q) {
 
   // Confirm button - matches choice button width (full content width)
   const canConfirm = selectedChoice !== null;
-  drawConfirmButton(cx, confirmY, cw, btnH, "Confirm", 
+  drawConfirmButton(cx, confirmY, cw, btnH, "Confirm  →", 
     isTouching(cx, confirmY, cw, btnH), canConfirm);
 }
 
@@ -1200,20 +1209,20 @@ function drawButton(x, y, w, h, label, hot) {
 }
 
 function drawSecondaryButton(x, y, w, h, label, hot) {
-  // SECONDARY BUTTON - White/cream with purple border + sticker shadow
+  // SECONDARY BUTTON - White/cream with DARK ink border + sticker shadow
   fill("#1A0F22"); // Ink-900 shadow
   noStroke();
   rect(x + 4, y + 4, w, h, 999);
   
-  // Main button: white with purple border
+  // Main button: white with dark ink border
   fill(hot ? "#F4ECFB" : "#FFFFFF"); // Purple-100 when hot, white default
-  stroke("#7A00DB"); // Purple-600 border
+  stroke("#1A0F22"); // Ink-900 border (dark, not purple)
   strokeWeight(2);
   rect(x, y, w, h, 999);
   
-  // Purple text
+  // Dark text
   noStroke();
-  fill("#7A00DB"); // Purple-600
+  fill("#1A0F22"); // Ink-900 (dark text on white)
   textSize(hot ? 17 : 16);
   textStyle(BOLD);
   textAlign(CENTER, CENTER);
@@ -1225,7 +1234,7 @@ function drawChoiceButton(x, y, w, h, label, hot, isSelected, alpha) {
   const bx = x + 20;
   const bw = w - 40;
   
-  // Sticker shadow (only when not selected, to make selection feel "pressed in")
+  // Sticker shadow - 3px offset for choice buttons (matches design)
   if (!isSelected) {
     fill(26, 15, 34, alpha * 0.9); // Ink-900 shadow
     noStroke();
@@ -1234,22 +1243,22 @@ function drawChoiceButton(x, y, w, h, label, hot, isSelected, alpha) {
   
   // Button background
   if (isSelected) {
-    // Selected: light purple bg with thicker purple border
+    // Selected: light purple bg with dark ink border
     fill(244, 236, 251, alpha); // Purple-100 (#F4ECFB)
-    stroke(122, 0, 219, alpha); // Purple-600 border
+    stroke(26, 15, 34, alpha); // Ink-900 border (dark, not purple)
     strokeWeight(2);
     rect(bx, y, bw, h, h / 2);
   } else {
-    // Default/hover: white with dark border
+    // Default/hover: white with DARK ink border
     fill(255, alpha);
-    stroke(26, 15, 34, alpha); // Ink-900 border
+    stroke(26, 15, 34, alpha); // Ink-900 border (dark)
     strokeWeight(hot ? 2 : 1.5);
     rect(bx, y, bw, h, h / 2);
   }
   
   // Checkmark circle on the left
-  const circleD = h * 0.45; // Circle diameter
-  const circleX = bx + h / 2; // Left padding equals half height for nice spacing
+  const circleD = h * 0.45;
+  const circleX = bx + h / 2;
   const circleY = y + h / 2;
   
   if (isSelected) {
@@ -1263,21 +1272,21 @@ function drawChoiceButton(x, y, w, h, label, hot, isSelected, alpha) {
     strokeWeight(2.5);
     strokeCap(ROUND);
     noFill();
-    const cs = circleD * 0.25; // checkmark size
+    const cs = circleD * 0.25;
     line(circleX - cs, circleY + 1, circleX - cs * 0.2, circleY + cs * 0.8);
     line(circleX - cs * 0.2, circleY + cs * 0.8, circleX + cs, circleY - cs * 0.6);
   } else {
-    // Empty circle (outline)
+    // Empty circle with dark border
     noFill();
     stroke(26, 15, 34, alpha); // Ink-900 border
     strokeWeight(1.5);
     circle(circleX, circleY, circleD);
   }
   
-  // Text - shifted right to make room for circle
+  // Text - dark ink, bold when selected
   noStroke();
   if (isSelected) {
-    fill(122, 0, 219, alpha); // Purple-600
+    fill(26, 15, 34, alpha); // Ink-900 (stays dark, just bold)
     textStyle(BOLD);
   } else {
     fill(26, 15, 34, alpha); // Ink-900
@@ -1285,7 +1294,7 @@ function drawChoiceButton(x, y, w, h, label, hot, isSelected, alpha) {
   }
   textSize(15);
   
-  // Text starts after circle, ends with right padding
+  // Text positioned to make room for circle
   const textStartX = circleX + circleD / 2 + 8;
   const textEndX = bx + bw - 16;
   const textCenterX = (textStartX + textEndX) / 2;
