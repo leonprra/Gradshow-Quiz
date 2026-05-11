@@ -851,25 +851,45 @@ function handleTap(px, py) {
   }
 
   if (appState === "quiz") {
-    // Match the same layout as drawQuestionScreen
-    const confirmGap = 20;
-    const choiceGap = btnGap;
+    // Match the exact layout from drawQuestionScreen
+    const SPACE_SM = 12;
+    const q = QUESTIONS[currentIdx];
+    if (!q) return;
     
+    // Confirm at bottom
     const confirmY = height - pad - btnH;
-    const btnY2 = confirmY - confirmGap - btnH;
-    const btnY1 = btnY2 - choiceGap - btnH;
+    
+    // Recalculate prompt height
+    const promptY = pad + 32;
+    const promptSize = constrain(floor(cw / 19), 14, 18);
+    textSize(promptSize);
+    const promptLines = wrapText(q.prompt, cw);
+    const promptLineHeight = promptSize * 1.3;
+    const promptHeight = promptLines.length * promptLineHeight;
+    
+    // Image position (square)
+    const imgTop = promptY + promptHeight + SPACE_SM;
+    const imgH = cw;
+    const imgBottom = imgTop + imgH;
+    
+    // Choice heights based on text content
+    const choice0H = getChoiceButtonHeight(q.choices[0], cw);
+    const choice1H = getChoiceButtonHeight(q.choices[1], cw);
+    
+    const choice0Y = imgBottom + SPACE_SM;
+    const choice1Y = choice0Y + choice0H + SPACE_SM;
 
-    if (hit(px, py, cx, btnY1, cw, btnH)) {
+    if (hit(px, py, cx, choice0Y, cw, choice0H)) {
       selectedChoice = 0;
       return;
     }
     
-    if (hit(px, py, cx, btnY2, cw, btnH)) {
+    if (hit(px, py, cx, choice1Y, cw, choice1H)) {
       selectedChoice = 1;
       return;
     }
     
-    // Confirm button now matches choice width (full content width)
+    // Confirm button (full content width)
     if (hit(px, py, cx, confirmY, cw, btnH)) {
       if (selectedChoice !== null) {
         answerQuestion(selectedChoice);
@@ -1114,57 +1134,81 @@ function drawQuestionScreen(q) {
   scale(questionScale);
   translate(-width / 2, -height / 2);
 
-  // Question counter: "Question 02 of 10"
+  // SPACING SYSTEM
+  const SPACE_SM = 12; // tight: prompt↔image, image↔choices, choice↔choice
+  const SPACE_LG = 24; // loose: minimum gap above confirm
+
+  // ---------- TOP: counter + prompt ----------
+  // Question counter
   const qNum = String(currentIdx + 1).padStart(2, '0');
   const qTotal = String(QUESTIONS.length).padStart(2, '0');
   textSize(13);
-  fill(107, 90, 115, questionAlpha); // Text muted (#6B5A73)
+  fill(107, 90, 115, questionAlpha); // Text muted
   textStyle(NORMAL);
+  textAlign(CENTER, CENTER);
   text(`Question ${qNum} of ${qTotal}`, width / 2, pad + 12);
 
-  fill(26, 15, 34, questionAlpha); // Ink-900 dark text (not purple)
+  // Prompt
+  fill(26, 15, 34, questionAlpha); // Ink-900
   textStyle(BOLD);
   const promptSize = constrain(floor(contentWidth() / 19), 14, 18);
   textSize(promptSize);
   textWrap(WORD);
-  text(q.prompt, cx, pad + 60, cw);
+  textAlign(CENTER, TOP);
+  const promptY = pad + 32;
+  text(q.prompt, cx, promptY, cw);
   textStyle(NORMAL);
+  
+  // Calculate prompt height (so image starts right below it)
+  const promptLines = wrapText(q.prompt, cw);
+  textSize(promptSize);
+  const promptLineHeight = promptSize * 1.3;
+  const promptHeight = promptLines.length * promptLineHeight;
 
-  // Calculate layout from bottom up:
-  // - Confirm button at very bottom (with pad)
-  // - Gap of ~20px between confirm and choices
-  // - 2 choice buttons stacked
-  // - Image fills remaining space ABOVE choices
-  
-  const confirmGap = 20; // Gap between choices and confirm
-  const choiceGap = btnGap; // Gap between two choice buttons
-  
+  // ---------- BOTTOM: confirm button (anchored) ----------
   const confirmY = height - pad - btnH;
-  const btnY2 = confirmY - confirmGap - btnH; // 2nd choice
-  const btnY1 = btnY2 - choiceGap - btnH;     // 1st choice
+
+  // ---------- CHOICES: heights based on text content ----------
+  const choice0H = getChoiceButtonHeight(q.choices[0], cw);
+  const choice1H = getChoiceButtonHeight(q.choices[1], cw);
   
-  // Image area: from top (after prompt) to just above first choice button
-  const imgTop = pad + 155;
-  const imgGapAboveChoices = 16; // Small gap between image and choice buttons
-  const imgBottom = btnY1 - imgGapAboveChoices;
-  const imgH = imgBottom - imgTop;
+  // Position choices stacked, with the second choice ending SPACE_LG above confirm
+  // But the choices should be placed so they flow naturally from the image
+  // So: image position determines where they go (flex space sits between choices and confirm)
   
+  // ---------- IMAGE: square, top-anchored below prompt ----------
+  const imgTop = promptY + promptHeight + SPACE_SM;
+  const imgW = cw;
+  const imgH = imgW; // SQUARE
+  const imgBottom = imgTop + imgH;
+  
+  // ---------- CHOICES position: directly below image with SPACE_SM gap ----------
+  const choice0Y = imgBottom + SPACE_SM;
+  const choice1Y = choice0Y + choice0H + SPACE_SM;
+  const choicesBottom = choice1Y + choice1H;
+  
+  // Sanity check: ensure space between choices bottom and confirm respects SPACE_LG minimum
+  // If choices push too low, we'd have overlap. In that case, we'd need to shrink the image.
+  // For now, we trust the design space.
+  
+  // ---------- DRAW IMAGE ----------
   push();
   tint(255, questionAlpha);
-  drawMediaFrame(q.imgId, cx, imgTop, cw, imgH);
+  drawMediaFrame(q.imgId, cx, imgTop, imgW, imgH);
   pop();
   
+  // ---------- DRAW CHOICES ----------
   const isSelected0 = selectedChoice === 0;
   const isSelected1 = selectedChoice === 1;
   
-  drawChoiceButton(cx, btnY1, cw, btnH, q.choices[0], 
-    isTouching(cx, btnY1, cw, btnH), isSelected0, questionAlpha);
-  drawChoiceButton(cx, btnY2, cw, btnH, q.choices[1], 
-    isTouching(cx, btnY2, cw, btnH), isSelected1, questionAlpha);
+  drawChoiceButton(cx, choice0Y, cw, choice0H, q.choices[0], 
+    isTouching(cx, choice0Y, cw, choice0H), isSelected0, questionAlpha);
+  drawChoiceButton(cx, choice1Y, cw, choice1H, q.choices[1], 
+    isTouching(cx, choice1Y, cw, choice1H), isSelected1, questionAlpha);
   
   pop();
 
-  // Confirm button - matches choice button width (full content width)
+  // ---------- DRAW CONFIRM (full width like choices) ----------
   const canConfirm = selectedChoice !== null;
   drawConfirmButton(cx, confirmY, cw, btnH, "Confirm  →", 
     isTouching(cx, confirmY, cw, btnH), canConfirm);
@@ -1233,33 +1277,38 @@ function drawSecondaryButton(x, y, w, h, label, hot) {
 function drawChoiceButton(x, y, w, h, label, hot, isSelected, alpha) {
   const bx = x + 20;
   const bw = w - 40;
+  const radius = 24; // Fixed radius (not pill)
   
-  // Sticker shadow - 3px offset for choice buttons (matches design)
+  // Sticker shadow - 3px offset
   if (!isSelected) {
     fill(26, 15, 34, alpha * 0.9); // Ink-900 shadow
     noStroke();
-    rect(bx + 3, y + 3, bw, h, h / 2); // pill shape
+    rect(bx + 3, y + 3, bw, h, radius);
   }
   
   // Button background
   if (isSelected) {
-    // Selected: light purple bg with dark ink border
+    // Selected: light purple bg with dark ink border, no shadow (pressed in)
     fill(244, 236, 251, alpha); // Purple-100 (#F4ECFB)
-    stroke(26, 15, 34, alpha); // Ink-900 border (dark, not purple)
-    strokeWeight(2);
-    rect(bx, y, bw, h, h / 2);
+    stroke(26, 15, 34, alpha);
+    strokeWeight(1.5);
+    rect(bx + 3, y + 3, bw, h, radius); // shifted to where shadow was
   } else {
-    // Default/hover: white with DARK ink border
+    // Default/hover: white with dark ink border
     fill(255, alpha);
-    stroke(26, 15, 34, alpha); // Ink-900 border (dark)
+    stroke(26, 15, 34, alpha);
     strokeWeight(hot ? 2 : 1.5);
-    rect(bx, y, bw, h, h / 2);
+    rect(bx, y, bw, h, radius);
   }
   
+  // Compute actual button x/y (accounting for "pressed in" offset when selected)
+  const actualBX = isSelected ? bx + 3 : bx;
+  const actualBY = isSelected ? y + 3 : y;
+  
   // Checkmark circle on the left
-  const circleD = h * 0.45;
-  const circleX = bx + h / 2;
-  const circleY = y + h / 2;
+  const circleD = 22;
+  const circleX = actualBX + 14 + circleD / 2;
+  const circleY = actualBY + h / 2;
   
   if (isSelected) {
     // Filled purple circle with white checkmark
@@ -1278,29 +1327,31 @@ function drawChoiceButton(x, y, w, h, label, hot, isSelected, alpha) {
   } else {
     // Empty circle with dark border
     noFill();
-    stroke(26, 15, 34, alpha); // Ink-900 border
+    stroke(26, 15, 34, alpha);
     strokeWeight(1.5);
     circle(circleX, circleY, circleD);
   }
   
-  // Text - dark ink, bold when selected
+  // Text - wrapped to fit
   noStroke();
-  if (isSelected) {
-    fill(26, 15, 34, alpha); // Ink-900 (stays dark, just bold)
-    textStyle(BOLD);
-  } else {
-    fill(26, 15, 34, alpha); // Ink-900
-    textStyle(NORMAL);
-  }
+  fill(26, 15, 34, alpha); // Ink-900
+  textStyle(isSelected ? BOLD : NORMAL);
   textSize(15);
   
-  // Text positioned to make room for circle
-  const textStartX = circleX + circleD / 2 + 8;
-  const textEndX = bx + bw - 16;
+  const textStartX = actualBX + 14 + circleD + 12;
+  const textEndX = actualBX + bw - 16;
+  const textAreaW = textEndX - textStartX;
   const textCenterX = (textStartX + textEndX) / 2;
   
+  const lines = wrapText(label, textAreaW);
+  const lineHeight = 20;
+  const totalTextH = lines.length * lineHeight;
+  const startY = actualBY + h / 2 - totalTextH / 2 + lineHeight / 2;
+  
   textAlign(CENTER, CENTER);
-  text(label, textCenterX, y + h / 2);
+  for (let i = 0; i < lines.length; i++) {
+    text(lines[i], textCenterX, startY + i * lineHeight);
+  }
   textStyle(NORMAL);
 }
 
@@ -1358,6 +1409,43 @@ function fitRect(sw, sh, dw, dh) {
     x: (dw - sw * s) / 2, 
     y: (dh - sh * s) / 2 
   };
+}
+
+// Wrap text into lines that fit within maxWidth
+// Returns array of line strings
+function wrapText(str, maxWidth) {
+  const words = str.split(' ');
+  const lines = [];
+  let line = '';
+  
+  for (let i = 0; i < words.length; i++) {
+    const testLine = line ? line + ' ' + words[i] : words[i];
+    if (textWidth(testLine) > maxWidth && line) {
+      lines.push(line);
+      line = words[i];
+    } else {
+      line = testLine;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+// Calculate the height a choice button needs to fit its text
+function getChoiceButtonHeight(label, w) {
+  const bx_pad = 20;
+  const bw = w - 40;
+  const circleD = 22;
+  const textStartX = bx_pad + circleD + 12;
+  const textEndX = bw - 16;
+  const textAreaW = textEndX - textStartX;
+  
+  textSize(15);
+  const lines = wrapText(label, textAreaW);
+  const lineHeight = 20;
+  const verticalPadding = 14 * 2; // top + bottom padding
+  
+  return max(52, lines.length * lineHeight + verticalPadding);
 }
 
 function windowResized() {
