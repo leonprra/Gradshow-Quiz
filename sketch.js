@@ -3,7 +3,8 @@ Mobile-friendly 10-question quiz (p5.js)
 Optimized for Telegram, iOS, Android
 Screens: Start > Quiz > Calculating > Result
 WITH SIMPLE FADE
-11 Character Results
+12 Character Results
+Responsive result screen: Landscape (side-by-side) vs Portrait (stacked)
 */
 
 let bg;
@@ -33,13 +34,13 @@ let QIMG = {};
 let RESULT_IMAGES = {};
 
 let currentIdx = 0;
-let answers = []; // Changed from scoringBits to answers
+let answers = [];
 let locked = false;
 let selectedChoice = null;
 
 // Gallery modal state
 let showGallery = false;
-let galleryViewChar = null; // Which character is being viewed in gallery
+let galleryViewChar = null;
 
 // Simple fade animation with scaling
 let questionAlpha = 0;
@@ -77,7 +78,7 @@ function preload() {
   QIMG.q9 = loadImage("q9.png");
   QIMG.q10 = loadImage("q10.png");
 
-  // Result images - 11 characters
+  // Result images - 12 characters
   RESULT_IMAGES["hammer"] = loadImage("Hammer.png");
   RESULT_IMAGES["calipers"] = loadImage("Calipers.png");
   RESULT_IMAGES["vr"] = loadImage("VR.png");
@@ -220,13 +221,13 @@ function draw() {
   btnH = max(44, min(60, height * 0.082));
   btnGap = max(8, min(14, height * 0.02));
 
-  background(255);
+  background("#FAF6F0"); // Cream background
 
   const dotSpacing = 24;
   noStroke();
   for (let row = 0; row * dotSpacing <= height + dotSpacing; row++) {
     for (let col = 0; col * dotSpacing <= width + dotSpacing; col++) {
-      fill("lightgrey");
+      fill("#DDD4E0"); // Ink-200 dots
       circle(col * dotSpacing, row * dotSpacing, 2);
     }
   }
@@ -262,19 +263,19 @@ function draw() {
 }
 
 function drawLandscapeWarning() {
-  fill(255);
+  fill("#FAF6F0"); // Cream background
   noStroke();
   rect(0, 0, width, height);
 
   textAlign(CENTER, CENTER);
-  fill(74, 0, 162);
+  fill("#7A00DB"); // Purple-600
   textSize(22);
   textStyle(BOLD);
   text("Please rotate your device", width / 2, height / 2 - 18);
 
   textStyle(NORMAL);
   textSize(15);
-  fill(120);
+  fill("#6B5A73"); // Text muted
   text("This quiz works best in portrait mode", width / 2, height / 2 + 16);
 }
 
@@ -296,7 +297,7 @@ function drawStartScreen() {
 
   textSize(18);
   textStyle(BOLD);
-  fill("#7a00db");
+  fill("#7A00DB"); // Purple-600
   let txt1 = "Every design gradshow is more than just final pieces on display.";
   text(txt1, cx, currentY, cw);
   let lines1 = calculateLines(txt1, cw, 18);
@@ -304,7 +305,7 @@ function drawStartScreen() {
 
   textSize(16);
   textStyle(NORMAL);
-  fill(50);
+  fill("#1A0F22"); // Ink-900 dark text
   let txt2 = "It's different people, different strengths, different ways of working.";
   text(txt2, cx, currentY, cw);
   let lines2 = calculateLines(txt2, cw, 16);
@@ -316,6 +317,8 @@ function drawStartScreen() {
   currentY += (16 * lineHeight * lines3) + 15;
 
   let txt4 = "What's your tool type?";
+  textStyle(BOLD);
+  fill("#7A00DB");
   text(txt4, cx, currentY, cw);
 
   pop();
@@ -350,15 +353,17 @@ function drawPreparingScreen() {
   const cx = contentX();
 
   textSize(22);
-  fill(20);
+  fill("#1A0F22"); // Ink-900
+  textStyle(BOLD);
   if (millis() - time >= preparingWait) {
     text("Let's go!", width / 2, height / 2 - 40);
   } else {
-    text("Transporting you to design school!!!", width / 2, height / 2 - 40);
+    text("Preparing your quiz...", width / 2, height / 2 - 40);
   }
+  textStyle(NORMAL);
 
   textSize(14);
-  fill(120);
+  fill("#6B5A73"); // Text muted
   if (millis() - lastSwap > swapMs) {
     idx = (idx + 1) % preparing.length;
     lastSwap = millis();
@@ -390,15 +395,17 @@ function drawCalculatingScreen() {
   const cx = contentX();
 
   textSize(22);
-  fill(20);
+  fill("#1A0F22"); // Ink-900
+  textStyle(BOLD);
   if (millis() - time >= wait) {
     text("Done!", width / 2, height / 2 - 40);
   } else {
     text("Calculating your results…", width / 2, height / 2 - 40);
   }
+  textStyle(NORMAL);
 
   textSize(14);
-  fill(120);
+  fill("#6B5A73"); // Text muted
   if (millis() - lastSwap > swapMs) {
     idx = (idx + 1) % calc.length;
     lastSwap = millis();
@@ -415,79 +422,114 @@ function drawCalculatingScreen() {
 }
 
 function drawResultScreen() {
+  const character = getCharacter();
+  const res = RESULT_IMAGES[character];
+  
+  // Determine layout based on aspect ratio
+  const isLandscape = width > height;
+  
+  if (isLandscape) {
+    // DESKTOP/LANDSCAPE: Side-by-side layout
+    drawResultScreenLandscape(character, res);
+  } else {
+    // MOBILE/PORTRAIT: Stacked layout (current)
+    drawResultScreenPortrait(character, res);
+  }
+  
+  // Draw gallery modal on top if open
+  if (showGallery) {
+    drawGalleryModal();
+  }
+}
+
+function drawResultScreenLandscape(character, res) {
+  // Left side: Result image (65% width)
+  const leftW = width * 0.65;
+  const leftX = pad;
+  const leftY = pad + 20;
+  const leftH = height - pad * 2 - 40;
+  
+  // Right side: Buttons (35% width)
+  const rightW = width * 0.35 - pad * 3;
+  const rightX = leftW + pad * 2;
+  const rightY = pad + 20;
+  
+  // Draw result image on left
+  if (res) {
+    const fitted = fitRect(res.width, res.height, leftW, leftH);
+    imageMode(CORNER);
+    image(res, leftX + fitted.x, leftY + fitted.y, fitted.w, fitted.h);
+  } else {
+    noStroke();
+    fill(245);
+    rect(leftX, leftY, leftW, leftH, 16);
+    fill(140);
+    textSize(14);
+    textAlign(CENTER, CENTER);
+    text("Result image here", leftX + leftW/2, leftY + leftH/2);
+  }
+  
+  // Buttons stacked vertically on right
+  const btnW = rightW;
+  const btnH = max(50, min(60, height * 0.08));
+  const btnGapVert = max(12, min(18, height * 0.025));
+  
+  const btn1Y = rightY + (height - pad * 2 - 40 - btnH * 3 - btnGapVert * 2) / 2;
+  const btn2Y = btn1Y + btnH + btnGapVert;
+  const btn3Y = btn2Y + btnH + btnGapVert;
+  
+  // Visit Website button
+  drawButton(rightX, btn1Y, btnW, btnH, "Visit the website!", 
+    isTouching(rightX, btn1Y, btnW, btnH));
+  
+  // All Tools button
+  drawButton(rightX, btn2Y, btnW, btnH, "All Tools", 
+    isTouching(rightX, btn2Y, btnW, btnH));
+  
+  // Share button
+  drawButton(rightX, btn3Y, btnW, btnH, "Share", 
+    isTouching(rightX, btn3Y, btnW, btnH));
+}
+
+function drawResultScreenPortrait(character, res) {
   const cw = contentWidth();
   const cx = contentX();
-  const character = getCharacter();
-  const isLandscape = width > height;
-
-  if (isLandscape) {
-    // ── Desktop layout: image left, buttons stacked right ──
-    const rightColW = min(240, width * 0.28);
-    const rightColX = width - rightColW - pad;
-    const imgAreaX = pad;
-    const imgAreaY = pad;
-    const imgAreaW = rightColX - pad - 8;
-    const imgAreaH = height - pad * 2;
-
-    // Result image — full left-side height
-    const res = RESULT_IMAGES[character];
-    if (res) {
-      const fitted = fitRect(res.width, res.height, imgAreaW, imgAreaH);
-      imageMode(CORNER);
-      image(res, imgAreaX + fitted.x, imgAreaY + fitted.y, fitted.w, fitted.h);
-    } else {
-      noStroke();
-      fill(245);
-      rect(imgAreaX, imgAreaY, imgAreaW, imgAreaH, 16);
-      fill(140);
-      textSize(14);
-      text("Result image here", imgAreaX + imgAreaW / 2, imgAreaY + imgAreaH / 2);
-    }
-
-    // Three buttons vertically centred in right column
-    const totalBtnH = btnH * 3 + btnGap * 2;
-    const btnStartY = (height - totalBtnH) / 2;
-
-    const visitBtnY   = btnStartY;
-    const allToolsBtnY = btnStartY + btnH + btnGap;
-    const shareBtnY   = btnStartY + (btnH + btnGap) * 2;
-
-    drawButton(rightColX, visitBtnY,    rightColW, btnH, "Visit the website!", isTouching(rightColX, visitBtnY,    rightColW, btnH));
-    drawButton(rightColX, allToolsBtnY, rightColW, btnH, "All Tools",          isTouching(rightColX, allToolsBtnY, rightColW, btnH));
-    drawButton(rightColX, shareBtnY,    rightColW, btnH, "Share",              isTouching(rightColX, shareBtnY,    rightColW, btnH));
-
+  
+  // Calculate button positions
+  const visitBtnY = height - pad - btnH * 2 - btnGap;
+  const btnY = height - pad - btnH;
+  
+  // Calculate image area (from top to button with padding)
+  const imgPadding = 24;
+  const imgTop = pad + 20;
+  const imgBottom = visitBtnY - imgPadding;
+  const availableHeight = imgBottom - imgTop;
+  
+  // Use full available height
+  if (res) {
+    const fitted = fitRect(res.width, res.height, cw, availableHeight);
+    imageMode(CORNER);
+    image(res, cx + fitted.x, imgTop + fitted.y, fitted.w, fitted.h);
   } else {
-    // ── Portrait layout (unchanged) ──
-    const visitBtnY = height - pad - btnH * 2 - btnGap;
-    const btnY      = height - pad - btnH;
-
-    const imgPadding = 24;
-    const imgTop     = pad + 20;
-    const imgBottom  = visitBtnY - imgPadding;
-    const availH     = imgBottom - imgTop;
-
-    const res = RESULT_IMAGES[character];
-    if (res) {
-      const fitted = fitRect(res.width, res.height, cw, availH);
-      imageMode(CORNER);
-      image(res, cx + fitted.x, imgTop + fitted.y, fitted.w, fitted.h);
-    } else {
-      noStroke();
-      fill(245);
-      rect(cx, imgTop, cw, availH, 16);
-      fill(140);
-      textSize(14);
-      text("Result image here", width / 2, imgTop + availH / 2);
-    }
-
-    drawButton(cx, visitBtnY, cw, btnH, "Visit the website!", isTouching(cx, visitBtnY, cw, btnH));
-
-    const half = (cw - btnGap) / 2;
-    drawButton(cx,              btnY, half, btnH, "All Tools", isTouching(cx,              btnY, half, btnH));
-    drawButton(cx + half + btnGap, btnY, half, btnH, "Share",     isTouching(cx + half + btnGap, btnY, half, btnH));
+    noStroke();
+    fill(245);
+    rect(cx, imgTop, cw, availableHeight, 16);
+    fill(140);
+    textSize(14);
+    textAlign(CENTER, CENTER);
+    text("Result image here", width / 2, imgTop + availableHeight / 2);
   }
 
-  if (showGallery) drawGalleryModal();
+  // Visit Website button
+  drawButton(cx, visitBtnY, cw, btnH, "Visit the website!", 
+    isTouching(cx, visitBtnY, cw, btnH));
+  
+  // All Tools and Share buttons
+  const half = (cw - btnGap) / 2;
+  drawButton(cx, btnY, half, btnH, "All Tools", 
+    isTouching(cx, btnY, half, btnH));
+  drawButton(cx + half + btnGap, btnY, half, btnH, "Share", 
+    isTouching(cx + half + btnGap, btnY, half, btnH));
 }
 
 /* ---------------- GALLERY MODAL ---------------- */
@@ -533,7 +575,7 @@ function drawGalleryGrid(x, y, w, h) {
   text("×", closeX + closeSize/2, closeY + closeSize/2);
   
   // Grid starts right after close button (removed title)
-  const gridStartY = y + 60; // Less space at top
+  const gridStartY = y + 60;
   const gridPad = 12;
   const cols = width > 600 ? 4 : 3;
   
@@ -548,7 +590,7 @@ function drawGalleryGrid(x, y, w, h) {
   
   // Use the smaller dimension to ensure everything fits
   let thumbW = thumbWFromWidth;
-  let thumbH = thumbW * 1.33; // Maintain aspect ratio
+  let thumbH = thumbW * 1.33;
   
   // If height doesn't fit, recalculate based on height
   if (thumbH * rows + gridPad * (rows - 1) > availableH) {
@@ -582,7 +624,7 @@ function drawGalleryGrid(x, y, w, h) {
     // Hover effect
     if (isTouching(thumbX, thumbY, thumbW, thumbH)) {
       noFill();
-      stroke(122, 0, 219); // Purple
+      stroke(122, 0, 219);
       strokeWeight(3);
       rect(thumbX, thumbY, thumbW, thumbH, 8);
     }
@@ -607,12 +649,12 @@ function drawGalleryCharacterView(x, y, w, h) {
   
   fill(100);
   textSize(20);
-  //textAlign(LEFT, CENTER);
+  textAlign(LEFT, CENTER);
   text("← Back", backX + 10, backY + backSize/2);
   
   // Character image (name removed, starts higher)
-  const imgTop = y + 52; // Starts right after back button
-  const imgH = h - 90; // More space for image
+  const imgTop = y + 70;
+  const imgH = h - 90;
   const res = RESULT_IMAGES[galleryViewChar];
   
   if (res) {
@@ -638,7 +680,7 @@ function handleGalleryTap(px, py) {
     const backY = modalY + 10;
     
     if (hit(px, py, backX, backY, backSize + 40, backSize)) {
-      galleryViewChar = null; // Back to grid
+      galleryViewChar = null;
       return;
     }
     return;
@@ -656,7 +698,7 @@ function handleGalleryTap(px, py) {
   }
   
   // Check thumbnail grid
-  const gridStartY = modalY + 60; // Match drawGalleryGrid
+  const gridStartY = modalY + 60;
   const gridPad = 12;
   const cols = width > 600 ? 4 : 3;
   
@@ -685,7 +727,7 @@ function handleGalleryTap(px, py) {
     const thumbY = gridStartY + row * (thumbH + gridPad);
     
     if (hit(px, py, thumbX, thumbY, thumbW, thumbH)) {
-      galleryViewChar = tools[i]; // Open this character
+      galleryViewChar = tools[i];
       return;
     }
   }
@@ -730,32 +772,70 @@ function handleTap(px, py) {
   }
 
   if (appState === "result") {
-    if (showGallery) { handleGalleryTap(px, py); return; }
-
+    // If gallery is open, handle gallery interactions
+    if (showGallery) {
+      handleGalleryTap(px, py);
+      return;
+    }
+    
+    // Check based on layout
     const isLandscape = width > height;
-
+    
     if (isLandscape) {
-      const rightColW  = min(240, width * 0.28);
-      const rightColX  = width - rightColW - pad;
-      const totalBtnH  = btnH * 3 + btnGap * 2;
-      const btnStartY  = (height - totalBtnH) / 2;
-
-      const visitBtnY    = btnStartY;
-      const allToolsBtnY = btnStartY + btnH + btnGap;
-      const shareBtnY    = btnStartY + (btnH + btnGap) * 2;
-
-      if (hit(px, py, rightColX, visitBtnY,    rightColW, btnH)) { window.location.href = "https://vina-setiawaty.github.io/Gradwebsite-2026/loading.html"; return; }
-      if (hit(px, py, rightColX, allToolsBtnY, rightColW, btnH)) { showGallery = true; galleryViewChar = null; return; }
-      if (hit(px, py, rightColX, shareBtnY,    rightColW, btnH)) { shareResult(); return; }
-
+      // LANDSCAPE LAYOUT BUTTONS
+      const rightW = width * 0.35 - pad * 3;
+      const rightX = width * 0.65 + pad * 2;
+      const rightY = pad + 20;
+      
+      const btnW = rightW;
+      const btnH = max(50, min(60, height * 0.08));
+      const btnGapVert = max(12, min(18, height * 0.025));
+      
+      const btn1Y = rightY + (height - pad * 2 - 40 - btnH * 3 - btnGapVert * 2) / 2;
+      const btn2Y = btn1Y + btnH + btnGapVert;
+      const btn3Y = btn2Y + btnH + btnGapVert;
+      
+      // Visit Website button
+      if (hit(px, py, rightX, btn1Y, btnW, btnH)) {
+        window.location.href = "https://vina-setiawaty.github.io/Gradwebsite-2026/loading.html";
+        return;
+      }
+      
+      // All Tools button
+      if (hit(px, py, rightX, btn2Y, btnW, btnH)) {
+        showGallery = true;
+        galleryViewChar = null;
+        return;
+      }
+      
+      // Share button
+      if (hit(px, py, rightX, btn3Y, btnW, btnH)) {
+        shareResult();
+        return;
+      }
     } else {
-      const btnY      = height - pad - btnH;
+      // PORTRAIT LAYOUT BUTTONS
+      const btnY = height - pad - btnH;
+      const half = (cw - btnGap) / 2;
       const visitBtnY = height - pad - btnH * 2 - btnGap;
-      const half      = (cw - btnGap) / 2;
-
-      if (hit(px, py, cx, visitBtnY, cw, btnH))              { window.location.href = "https://vina-setiawaty.github.io/Gradwebsite-2026/loading.html"; return; }
-      if (hit(px, py, cx, btnY, half, btnH))                 { showGallery = true; galleryViewChar = null; return; }
-      if (hit(px, py, cx + half + btnGap, btnY, half, btnH)) { shareResult(); return; }
+    
+      // Check All Tools button
+      if (hit(px, py, cx, btnY, half, btnH)) {
+        showGallery = true;
+        galleryViewChar = null;
+        return;
+      }
+      // Check Share button
+      if (hit(px, py, cx + half + btnGap, btnY, half, btnH)) {
+        shareResult();
+        return;
+      }
+      
+      // Check Visit Website button
+      if (hit(px, py, cx, visitBtnY, cw, btnH)) {
+        window.location.href = "https://vina-setiawaty.github.io/Gradwebsite-2026/loading.html";
+        return;
+      }
     }
     return;
   }
@@ -789,7 +869,7 @@ function handleTap(px, py) {
 
 function answerQuestion(choice) {
   locked = true;
-  answers.push(choice); // Store all answers
+  answers.push(choice);
   
   isTransitioning = true;
   
@@ -868,11 +948,11 @@ function getCharacter() {
   };
   
   // Q1: Wake up (padding)
-  if (answers[0] === 0) { // Sleep in
+  if (answers[0] === 0) {
     scores.coffee += 1;
     scores.notepad += 1;
     scores.tape += 1;
-  } else { // Rise and grind
+  } else {
     scores.ruler += 1;
     scores.calipers += 1;
     scores.mouse += 1;
@@ -880,51 +960,52 @@ function getCharacter() {
   }
   
   // Q2: Dressed (padding)
-  if (answers[1] === 0) { // Casual
+  if (answers[1] === 0) {
     scores.tape += 1;
     scores.hammer += 1;
     scores.coffee += 1;
-  } else { // Dressed up
+  } else {
     scores.ruler += 1;
     scores.sewing += 1;
     scores.calipers += 1;
   }
   
-  // Q3: Bus delayed (SCORING) - USB gets high score for "update the group"
-  if (answers[2] === 0) { // Take route and UPDATE THE GROUP
+  // Q3: Bus delayed (SCORING)
+  if (answers[2] === 0) {
     scores.ruler += 3;
-    scores.thumb += 3; // USB Drive: connector, shares info
+    scores.thumb += 3;
     scores.mouse += 2;
     scores.calipers += 2;
     scores.vr += 1;
-  } else { // Buy snacks
+  } else {
     scores.coffee += 3;
+    scores.mat += 2;
     scores.glue += 2;
-    scores.tape += 2;
-    scores.mat += 1;
+    scores.tape += 1;
   }
   
   // Q4: Desk mess (SCORING)
-  if (answers[3] === 0) { // Carve space
+  if (answers[3] === 0) {
     scores.tape += 3;
     scores.hammer += 2;
     scores.glue += 2;
     scores.mouse += 1;
-  } else { // Reset table
+  } else {
     scores.ruler += 3;
     scores.mat += 2;
     scores.sewing += 2;
     scores.calipers += 1;
-    scores.thumb += 1; // Organized, systematic
+    scores.thumb += 1;
   }
   
   // Q5: Deskmate stuck (SCORING)
-  if (answers[4] === 0) { // What's not working?
+  if (answers[4] === 0) {
     scores.notepad += 3;
     scores.mouse += 2;
     scores.calipers += 2;
+    scores.thumb += 1;
     scores.sewing += 1;
-  } else { // Coffee break!
+  } else {
     scores.coffee += 3;
     scores.vr += 2;
     scores.glue += 2;
@@ -932,68 +1013,68 @@ function getCharacter() {
   }
   
   // Q6: Deadline (SCORING)
-  if (answers[5] === 0) { // Send it
+  if (answers[5] === 0) {
     scores.hammer += 3;
     scores.tape += 2;
     scores.mouse += 2;
     scores.glue += 1;
-  } else { // Keep tweaking
+  } else {
     scores.sewing += 3;
     scores.calipers += 2;
     scores.ruler += 2;
-    scores.notepad += 1;
   }
   
   // Q7: Break time (padding)
-  if (answers[6] === 0) { // Walk/snack
+  if (answers[6] === 0) {
     scores.coffee += 1;
     scores.glue += 1;
     scores.mat += 1;
-  } else { // Calm space
+  } else {
     scores.notepad += 1;
     scores.vr += 2;
     scores.calipers += 1;
   }
   
   // Q8: Beauty moment (SCORING)
-  if (answers[7] === 0) { // Capture it - USB: saves/stores moments
+  if (answers[7] === 0) {
     scores.notepad += 3;
-    scores.thumb += 2; // USB: backs up, preserves
+    scores.thumb += 2;
     scores.mouse += 2;
     scores.calipers += 1;
     scores.mat += 1;
-  } else { // Just enjoy
+  } else {
     scores.coffee += 3;
     scores.vr += 2;
+    scores.mat += 1;
     scores.sewing += 1;
     scores.hammer += 1;
   }
   
   // Q9: Something not working (SCORING)
-  if (answers[8] === 0) { // Google it
+  if (answers[8] === 0) {
     scores.mouse += 3;
     scores.vr += 2;
     scores.hammer += 2;
     scores.tape += 1;
-  } else { // Think it through
+  } else {
     scores.notepad += 3;
     scores.calipers += 2;
-    scores.ruler += 2;
+    scores.thumb += 1;
+    scores.ruler += 1;
     scores.sewing += 1;
   }
   
   // Q10: New project brief (SCORING)
-  if (answers[9] === 0) { // Start sketching
+  if (answers[9] === 0) {
     scores.hammer += 3;
     scores.tape += 2;
     scores.vr += 2;
     scores.glue += 1;
-  } else { // Read & timeline - USB: systematic, shares plan
+  } else {
     scores.ruler += 3;
     scores.mat += 2;
-    scores.thumb += 2; // USB: organizes, distributes info
+    scores.thumb += 2;
     scores.calipers += 2;
-    scores.notepad += 1;
   }
   
   // Find winner
@@ -1022,23 +1103,25 @@ function drawQuestionScreen(q) {
   translate(-width / 2, -height / 2);
 
   textSize(15);
-  fill(20, questionAlpha);
+  fill(26, 15, 34, questionAlpha); // Ink-900
   text(`Q ${currentIdx + 1} / ${QUESTIONS.length}`, width / 2, pad + 12);
 
-  fill(74, 0, 162, questionAlpha);
+  fill(122, 0, 219, questionAlpha); // Purple-600
+  textStyle(BOLD);
   const promptSize = constrain(floor(contentWidth() / 19), 14, 18);
   textSize(promptSize);
   textWrap(WORD);
   text(q.prompt, cx, pad + 60, cw);
+  textStyle(NORMAL);
 
   push();
   tint(255, questionAlpha);
-  const imgTop = pad + 120;
+  const imgTop = pad + 155;
 
   const btnY1 = height - pad - btnH * 3 - btnGap * 2;
   const minGap = 24;
   const maxImgHeight = btnY1 - imgTop - minGap;
-  const imgH = min(height * 0.60, maxImgHeight);
+  const imgH = min(height * 0.50, maxImgHeight);
 
   drawMediaFrame(q.imgId, cx, imgTop, cw, imgH);
   pop();
@@ -1085,59 +1168,91 @@ function drawMediaFrame(imgId, x, y, w, h) {
 }
 
 function drawButton(x, y, w, h, label, hot) {
-  fill(hot ? "#DABBFF" : "#EEE0FF");
+  // Sticker shadow effect - hard offset, no blur
+  fill("#1A0F22"); // Ink-900 (dark shadow)
   noStroke();
-  rect(x+44, y, w-88, h, 18);
+  rect(x + 4, y + 4, w, h, 999); // h/2=999 makes pill shape
   
-  fill(hot ? 250 : 20);
+  // Main button on top of shadow
+  fill(hot ? "#5A00A8" : "#7A00DB"); // Purple-700 when hot, Purple-600 default
+  rect(x, y, w, h, 999);
+  
+  // White text
+  fill(255);
   textSize(hot ? 17 : 16);
+  textStyle(BOLD);
+  textAlign(CENTER, CENTER);
   text(label, x + w / 2, y + h / 2);
+  textStyle(NORMAL);
 }
 
 function drawChoiceButton(x, y, w, h, label, hot, isSelected, alpha) {
-  if (isSelected) {
-    fill(218, 187, 255, alpha);
-    stroke(174, 135, 231, alpha);
-    strokeWeight(2); 
-    rect(x+22, y, w-44, h, 10);
-  } else {
-    if (hot) {
-      fill(218, 187, 255, alpha);
-    } else {
-      fill(174, 135, 231, alpha);
-    }
+  const bx = x + 20;
+  const bw = w - 40;
+  
+  // Sticker shadow (only when not selected, to make selection feel "pressed in")
+  if (!isSelected) {
+    fill(26, 15, 34, alpha); // Ink-900 shadow
     noStroke();
-    rect(x+20, y, w-40, h, 10);
+    rect(bx + 3, y + 3, bw, h, 16);
   }
   
+  // Button background
+  if (isSelected) {
+    // Selected: light purple bg with purple border
+    fill(233, 219, 251, alpha); // Selected-bg (#E9DBFB)
+    stroke(122, 0, 219, alpha); // Purple-600 border
+    strokeWeight(2);
+    rect(bx, y, bw, h, 16);
+  } else {
+    // Default/hover: white with purple border
+    fill(255, alpha);
+    stroke(122, 0, 219, alpha);
+    strokeWeight(hot ? 2 : 1.5);
+    rect(bx, y, bw, h, 16);
+  }
+  
+  // Text
   noStroke();
   if (isSelected) {
-    fill(174, 135, 231, alpha);
-  } else if (hot) {
-    fill(247, 239, 255, alpha);
+    fill(122, 0, 219, alpha); // Purple text when selected
+    textStyle(BOLD);
   } else {
-    fill(250, alpha);
+    fill(26, 15, 34, alpha); // Ink-900 dark text
+    textStyle(NORMAL);
   }
-  textSize(isSelected ? 15 : (hot ? 16 : 15));
+  textSize(isSelected ? 16 : (hot ? 16 : 15));
+  textAlign(CENTER, CENTER);
   text(label, x + w / 2, y + h / 2);
+  textStyle(NORMAL);
 }
 
 function drawConfirmButton(x, y, w, h, label, hot, enabled) {
-  const confirmBtnWidth = 150;
+  const confirmBtnWidth = 160;
   const confirmX = width/2;
+  const btnX = confirmX - confirmBtnWidth / 2;
   
+  // Sticker shadow (only when enabled)
   if (enabled) {
-    fill(hot ? "#FFC107" : "#7a00db");
-  } else {
-    fill("#EAEAEA");
+    fill("#1A0F22"); // Ink-900 dark shadow
+    noStroke();
+    rect(btnX + 4, y + 4, confirmBtnWidth, h, 999);
   }
   
+  // Main button
   noStroke();
-  ellipse(confirmX, y+h/2, confirmBtnWidth, h); 
+  if (enabled) {
+    fill(hot ? "#5A00A8" : "#7A00DB"); // Purple-700 when hot, Purple-600 default
+  } else {
+    fill("#ECE5EE"); // Ink-100 disabled
+  }
+  rect(btnX, y, confirmBtnWidth, h, 999); // pill shape
   
-  fill(enabled ? 255 : 150);
+  // Text
+  fill(enabled ? 255 : "#B5AAB8");
   textSize(17);
   textStyle(BOLD);
+  textAlign(CENTER, CENTER);
   text(label, confirmX, y + h / 2);
   textStyle(NORMAL);
 }
