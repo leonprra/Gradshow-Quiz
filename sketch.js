@@ -18,7 +18,7 @@ let idx = 0;
 let lastSwap = 0;
 let swapMs = 1200;
 
-const MAX_CONTENT_W = 600;
+const MAX_CONTENT_W = 420; // Phone-width, even on desktop
 
 // Layout
 let pad = 18;
@@ -221,7 +221,7 @@ function draw() {
   btnH = max(44, min(60, height * 0.082));
   btnGap = max(8, min(14, height * 0.02));
 
-  background("#FAF6F0"); // Cream background
+  background("#FFFFFF"); // Cream background
 
   const dotSpacing = 24;
   noStroke();
@@ -443,15 +443,20 @@ function drawResultScreen() {
 }
 
 function drawResultScreenLandscape(character, res) {
+  // Cap total content width on very wide screens for readability
+  const MAX_LANDSCAPE_W = 1100;
+  const stageW = min(width, MAX_LANDSCAPE_W);
+  const stageX = (width - stageW) / 2; // center the stage
+  
   // Left side: Result image (65% width)
-  const leftW = width * 0.65;
-  const leftX = pad;
+  const leftW = stageW * 0.65;
+  const leftX = stageX + pad;
   const leftY = pad + 20;
   const leftH = height - pad * 2 - 40;
   
   // Right side: Buttons (35% width)
-  const rightW = width * 0.35 - pad * 3;
-  const rightX = leftW + pad * 2;
+  const rightW = stageW * 0.35 - pad * 3;
+  const rightX = stageX + leftW + pad * 2;
   const rightY = pad + 20;
   
   // Draw result image on left
@@ -790,9 +795,14 @@ function handleTap(px, py) {
     const isLandscape = width > height;
     
     if (isLandscape) {
-      // LANDSCAPE LAYOUT - 3 stacked buttons on right
-      const rightW = width * 0.35 - pad * 3;
-      const rightX = width * 0.65 + pad * 2;
+      // LANDSCAPE LAYOUT - 3 stacked buttons on right (matches drawResultScreenLandscape)
+      const MAX_LANDSCAPE_W = 1100;
+      const stageW = min(width, MAX_LANDSCAPE_W);
+      const stageX = (width - stageW) / 2;
+      
+      const leftW = stageW * 0.65;
+      const rightW = stageW * 0.35 - pad * 3;
+      const rightX = stageX + leftW + pad * 2;
       const rightY = pad + 20;
       
       const btnW = rightW;
