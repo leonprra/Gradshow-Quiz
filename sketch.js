@@ -471,41 +471,43 @@ function drawResultScreenLandscape(character, res) {
   
   // Buttons stacked vertically on right
   const btnW = rightW;
-  const btnH = max(50, min(60, height * 0.08));
+  const btnHL = max(50, min(60, height * 0.08));
   const btnGapVert = max(12, min(18, height * 0.025));
   
-  const btn1Y = rightY + (height - pad * 2 - 40 - btnH * 3 - btnGapVert * 2) / 2;
-  const btn2Y = btn1Y + btnH + btnGapVert;
-  const btn3Y = btn2Y + btnH + btnGapVert;
+  const btn1Y = rightY + (height - pad * 2 - 40 - btnHL * 3 - btnGapVert * 2) / 2;
+  const btn2Y = btn1Y + btnHL + btnGapVert;
+  const btn3Y = btn2Y + btnHL + btnGapVert;
   
-  // Visit Website button
-  drawButton(rightX, btn1Y, btnW, btnH, "Visit the website!", 
-    isTouching(rightX, btn1Y, btnW, btnH));
+  // Button 1: Primary - Visit gradshow site
+  drawButton(rightX, btn1Y, btnW, btnHL, "Visit gradshow site  ↗", 
+    isTouching(rightX, btn1Y, btnW, btnHL));
   
-  // All Tools button
-  drawButton(rightX, btn2Y, btnW, btnH, "All Tools", 
-    isTouching(rightX, btn2Y, btnW, btnH));
+  // Button 2: Secondary - See all 12 tools
+  drawSecondaryButton(rightX, btn2Y, btnW, btnHL, "See all 12 tools", 
+    isTouching(rightX, btn2Y, btnW, btnHL));
   
-  // Share button
-  drawButton(rightX, btn3Y, btnW, btnH, "Share", 
-    isTouching(rightX, btn3Y, btnW, btnH));
+  // Button 3: Secondary - Share my result
+  drawSecondaryButton(rightX, btn3Y, btnW, btnHL, "Share my result  ↗", 
+    isTouching(rightX, btn3Y, btnW, btnHL));
 }
 
 function drawResultScreenPortrait(character, res) {
   const cw = contentWidth();
   const cx = contentX();
   
-  // Calculate button positions
-  const visitBtnY = height - pad - btnH * 2 - btnGap;
-  const btnY = height - pad - btnH;
+  // 3 stacked vertical buttons
+  const btnGapVert = max(10, min(14, height * 0.018));
+  const btn3Y = height - pad - btnH;
+  const btn2Y = btn3Y - btnH - btnGapVert;
+  const btn1Y = btn2Y - btnH - btnGapVert;
   
-  // Calculate image area (from top to button with padding)
+  // Calculate image area (from top to first button with padding)
   const imgPadding = 24;
   const imgTop = pad + 20;
-  const imgBottom = visitBtnY - imgPadding;
+  const imgBottom = btn1Y - imgPadding;
   const availableHeight = imgBottom - imgTop;
   
-  // Use full available height
+  // Result image
   if (res) {
     const fitted = fitRect(res.width, res.height, cw, availableHeight);
     imageMode(CORNER);
@@ -520,16 +522,17 @@ function drawResultScreenPortrait(character, res) {
     text("Result image here", width / 2, imgTop + availableHeight / 2);
   }
 
-  // Visit Website button
-  drawButton(cx, visitBtnY, cw, btnH, "Visit the website!", 
-    isTouching(cx, visitBtnY, cw, btnH));
+  // Button 1: Primary - Visit gradshow site
+  drawButton(cx, btn1Y, cw, btnH, "Visit gradshow site  ↗", 
+    isTouching(cx, btn1Y, cw, btnH));
   
-  // All Tools and Share buttons
-  const half = (cw - btnGap) / 2;
-  drawButton(cx, btnY, half, btnH, "All Tools", 
-    isTouching(cx, btnY, half, btnH));
-  drawButton(cx + half + btnGap, btnY, half, btnH, "Share", 
-    isTouching(cx + half + btnGap, btnY, half, btnH));
+  // Button 2: Secondary - See all 12 tools
+  drawSecondaryButton(cx, btn2Y, cw, btnH, "See all 12 tools", 
+    isTouching(cx, btn2Y, cw, btnH));
+  
+  // Button 3: Secondary - Share my result
+  drawSecondaryButton(cx, btn3Y, cw, btnH, "Share my result  ↗", 
+    isTouching(cx, btn3Y, cw, btnH));
 }
 
 /* ---------------- GALLERY MODAL ---------------- */
@@ -782,58 +785,60 @@ function handleTap(px, py) {
     const isLandscape = width > height;
     
     if (isLandscape) {
-      // LANDSCAPE LAYOUT BUTTONS
+      // LANDSCAPE LAYOUT - 3 stacked buttons on right
       const rightW = width * 0.35 - pad * 3;
       const rightX = width * 0.65 + pad * 2;
       const rightY = pad + 20;
       
       const btnW = rightW;
-      const btnH = max(50, min(60, height * 0.08));
+      const btnHL = max(50, min(60, height * 0.08));
       const btnGapVert = max(12, min(18, height * 0.025));
       
-      const btn1Y = rightY + (height - pad * 2 - 40 - btnH * 3 - btnGapVert * 2) / 2;
-      const btn2Y = btn1Y + btnH + btnGapVert;
-      const btn3Y = btn2Y + btnH + btnGapVert;
+      const btn1Y = rightY + (height - pad * 2 - 40 - btnHL * 3 - btnGapVert * 2) / 2;
+      const btn2Y = btn1Y + btnHL + btnGapVert;
+      const btn3Y = btn2Y + btnHL + btnGapVert;
       
-      // Visit Website button
-      if (hit(px, py, rightX, btn1Y, btnW, btnH)) {
+      // Button 1: Visit gradshow site
+      if (hit(px, py, rightX, btn1Y, btnW, btnHL)) {
         window.location.href = "https://vina-setiawaty.github.io/Gradwebsite-2026/loading.html";
         return;
       }
       
-      // All Tools button
-      if (hit(px, py, rightX, btn2Y, btnW, btnH)) {
+      // Button 2: See all 12 tools
+      if (hit(px, py, rightX, btn2Y, btnW, btnHL)) {
         showGallery = true;
         galleryViewChar = null;
         return;
       }
       
-      // Share button
-      if (hit(px, py, rightX, btn3Y, btnW, btnH)) {
+      // Button 3: Share my result
+      if (hit(px, py, rightX, btn3Y, btnW, btnHL)) {
         shareResult();
         return;
       }
     } else {
-      // PORTRAIT LAYOUT BUTTONS
-      const btnY = height - pad - btnH;
-      const half = (cw - btnGap) / 2;
-      const visitBtnY = height - pad - btnH * 2 - btnGap;
+      // PORTRAIT LAYOUT - 3 stacked buttons at bottom
+      const btnGapVert = max(10, min(14, height * 0.018));
+      const btn3Y = height - pad - btnH;
+      const btn2Y = btn3Y - btnH - btnGapVert;
+      const btn1Y = btn2Y - btnH - btnGapVert;
     
-      // Check All Tools button
-      if (hit(px, py, cx, btnY, half, btnH)) {
+      // Button 1: Visit gradshow site (top)
+      if (hit(px, py, cx, btn1Y, cw, btnH)) {
+        window.location.href = "https://vina-setiawaty.github.io/Gradwebsite-2026/loading.html";
+        return;
+      }
+      
+      // Button 2: See all 12 tools (middle)
+      if (hit(px, py, cx, btn2Y, cw, btnH)) {
         showGallery = true;
         galleryViewChar = null;
         return;
       }
-      // Check Share button
-      if (hit(px, py, cx + half + btnGap, btnY, half, btnH)) {
-        shareResult();
-        return;
-      }
       
-      // Check Visit Website button
-      if (hit(px, py, cx, visitBtnY, cw, btnH)) {
-        window.location.href = "https://vina-setiawaty.github.io/Gradwebsite-2026/loading.html";
+      // Button 3: Share my result (bottom)
+      if (hit(px, py, cx, btn3Y, cw, btnH)) {
+        shareResult();
         return;
       }
     }
@@ -841,12 +846,13 @@ function handleTap(px, py) {
   }
 
   if (appState === "quiz") {
-    const btnY1 = height - pad - btnH * 3 - btnGap * 2;
-    const btnY2 = height - pad - btnH * 2 - btnGap;
-    const confirmY = height - pad - btnH;
+    // Match the same layout as drawQuestionScreen
+    const confirmGap = 20;
+    const choiceGap = btnGap;
     
-    const confirmBtnWidth = 200;
-    const confirmX = cx + (cw - confirmBtnWidth) / 2;
+    const confirmY = height - pad - btnH;
+    const btnY2 = confirmY - confirmGap - btnH;
+    const btnY1 = btnY2 - choiceGap - btnH;
 
     if (hit(px, py, cx, btnY1, cw, btnH)) {
       selectedChoice = 0;
@@ -858,7 +864,8 @@ function handleTap(px, py) {
       return;
     }
     
-    if (hit(px, py, confirmX, confirmY, confirmBtnWidth, btnH)) {
+    // Confirm button now matches choice width (full content width)
+    if (hit(px, py, cx, confirmY, cw, btnH)) {
       if (selectedChoice !== null) {
         answerQuestion(selectedChoice);
       }
@@ -1114,19 +1121,29 @@ function drawQuestionScreen(q) {
   text(q.prompt, cx, pad + 60, cw);
   textStyle(NORMAL);
 
+  // Calculate layout from bottom up:
+  // - Confirm button at very bottom (with pad)
+  // - Gap of ~20px between confirm and choices
+  // - 2 choice buttons stacked
+  // - Image fills remaining space ABOVE choices
+  
+  const confirmGap = 20; // Gap between choices and confirm
+  const choiceGap = btnGap; // Gap between two choice buttons
+  
+  const confirmY = height - pad - btnH;
+  const btnY2 = confirmY - confirmGap - btnH; // 2nd choice
+  const btnY1 = btnY2 - choiceGap - btnH;     // 1st choice
+  
+  // Image area: from top (after prompt) to just above first choice button
+  const imgTop = pad + 155;
+  const imgGapAboveChoices = 16; // Small gap between image and choice buttons
+  const imgBottom = btnY1 - imgGapAboveChoices;
+  const imgH = imgBottom - imgTop;
+  
   push();
   tint(255, questionAlpha);
-  const imgTop = pad + 155;
-
-  const btnY1 = height - pad - btnH * 3 - btnGap * 2;
-  const minGap = 24;
-  const maxImgHeight = btnY1 - imgTop - minGap;
-  const imgH = min(height * 0.50, maxImgHeight);
-
   drawMediaFrame(q.imgId, cx, imgTop, cw, imgH);
   pop();
-
-  const btnY2 = height - pad - btnH * 2 - btnGap;
   
   const isSelected0 = selectedChoice === 0;
   const isSelected1 = selectedChoice === 1;
@@ -1138,14 +1155,10 @@ function drawQuestionScreen(q) {
   
   pop();
 
-  const confirmY = height - pad - btnH;
+  // Confirm button - matches choice button width (full content width)
   const canConfirm = selectedChoice !== null;
-  
-  const confirmBtnWidth = 200;
-  const confirmX = cx + (cw - confirmBtnWidth) / 2;
-  
-  drawConfirmButton(confirmX, confirmY, confirmBtnWidth, btnH, "Confirm", 
-    isTouching(confirmX, confirmY, confirmBtnWidth, btnH), canConfirm);
+  drawConfirmButton(cx, confirmY, cw, btnH, "Confirm", 
+    isTouching(cx, confirmY, cw, btnH), canConfirm);
 }
 
 function drawMediaFrame(imgId, x, y, w, h) {
@@ -1168,10 +1181,10 @@ function drawMediaFrame(imgId, x, y, w, h) {
 }
 
 function drawButton(x, y, w, h, label, hot) {
-  // Sticker shadow effect - hard offset, no blur
+  // PRIMARY BUTTON - Solid purple with sticker shadow
   fill("#1A0F22"); // Ink-900 (dark shadow)
   noStroke();
-  rect(x + 4, y + 4, w, h, 999); // h/2=999 makes pill shape
+  rect(x + 4, y + 4, w, h, 999); // Sticker shadow
   
   // Main button on top of shadow
   fill(hot ? "#5A00A8" : "#7A00DB"); // Purple-700 when hot, Purple-600 default
@@ -1186,57 +1199,112 @@ function drawButton(x, y, w, h, label, hot) {
   textStyle(NORMAL);
 }
 
+function drawSecondaryButton(x, y, w, h, label, hot) {
+  // SECONDARY BUTTON - White/cream with purple border + sticker shadow
+  fill("#1A0F22"); // Ink-900 shadow
+  noStroke();
+  rect(x + 4, y + 4, w, h, 999);
+  
+  // Main button: white with purple border
+  fill(hot ? "#F4ECFB" : "#FFFFFF"); // Purple-100 when hot, white default
+  stroke("#7A00DB"); // Purple-600 border
+  strokeWeight(2);
+  rect(x, y, w, h, 999);
+  
+  // Purple text
+  noStroke();
+  fill("#7A00DB"); // Purple-600
+  textSize(hot ? 17 : 16);
+  textStyle(BOLD);
+  textAlign(CENTER, CENTER);
+  text(label, x + w / 2, y + h / 2);
+  textStyle(NORMAL);
+}
+
 function drawChoiceButton(x, y, w, h, label, hot, isSelected, alpha) {
   const bx = x + 20;
   const bw = w - 40;
   
   // Sticker shadow (only when not selected, to make selection feel "pressed in")
   if (!isSelected) {
-    fill(26, 15, 34, alpha); // Ink-900 shadow
+    fill(26, 15, 34, alpha * 0.9); // Ink-900 shadow
     noStroke();
-    rect(bx + 3, y + 3, bw, h, 16);
+    rect(bx + 3, y + 3, bw, h, h / 2); // pill shape
   }
   
   // Button background
   if (isSelected) {
-    // Selected: light purple bg with purple border
-    fill(233, 219, 251, alpha); // Selected-bg (#E9DBFB)
+    // Selected: light purple bg with thicker purple border
+    fill(244, 236, 251, alpha); // Purple-100 (#F4ECFB)
     stroke(122, 0, 219, alpha); // Purple-600 border
     strokeWeight(2);
-    rect(bx, y, bw, h, 16);
+    rect(bx, y, bw, h, h / 2);
   } else {
-    // Default/hover: white with purple border
+    // Default/hover: white with dark border
     fill(255, alpha);
-    stroke(122, 0, 219, alpha);
+    stroke(26, 15, 34, alpha); // Ink-900 border
     strokeWeight(hot ? 2 : 1.5);
-    rect(bx, y, bw, h, 16);
+    rect(bx, y, bw, h, h / 2);
   }
   
-  // Text
+  // Checkmark circle on the left
+  const circleD = h * 0.45; // Circle diameter
+  const circleX = bx + h / 2; // Left padding equals half height for nice spacing
+  const circleY = y + h / 2;
+  
+  if (isSelected) {
+    // Filled purple circle with white checkmark
+    noStroke();
+    fill(122, 0, 219, alpha); // Purple-600
+    circle(circleX, circleY, circleD);
+    
+    // White checkmark
+    stroke(255, alpha);
+    strokeWeight(2.5);
+    strokeCap(ROUND);
+    noFill();
+    const cs = circleD * 0.25; // checkmark size
+    line(circleX - cs, circleY + 1, circleX - cs * 0.2, circleY + cs * 0.8);
+    line(circleX - cs * 0.2, circleY + cs * 0.8, circleX + cs, circleY - cs * 0.6);
+  } else {
+    // Empty circle (outline)
+    noFill();
+    stroke(26, 15, 34, alpha); // Ink-900 border
+    strokeWeight(1.5);
+    circle(circleX, circleY, circleD);
+  }
+  
+  // Text - shifted right to make room for circle
   noStroke();
   if (isSelected) {
-    fill(122, 0, 219, alpha); // Purple text when selected
+    fill(122, 0, 219, alpha); // Purple-600
     textStyle(BOLD);
   } else {
-    fill(26, 15, 34, alpha); // Ink-900 dark text
+    fill(26, 15, 34, alpha); // Ink-900
     textStyle(NORMAL);
   }
-  textSize(isSelected ? 16 : (hot ? 16 : 15));
+  textSize(15);
+  
+  // Text starts after circle, ends with right padding
+  const textStartX = circleX + circleD / 2 + 8;
+  const textEndX = bx + bw - 16;
+  const textCenterX = (textStartX + textEndX) / 2;
+  
   textAlign(CENTER, CENTER);
-  text(label, x + w / 2, y + h / 2);
+  text(label, textCenterX, y + h / 2);
   textStyle(NORMAL);
 }
 
 function drawConfirmButton(x, y, w, h, label, hot, enabled) {
-  const confirmBtnWidth = 160;
-  const confirmX = width/2;
-  const btnX = confirmX - confirmBtnWidth / 2;
+  // Match choice button width (with 20px padding on each side)
+  const bx = x + 20;
+  const bw = w - 40;
   
   // Sticker shadow (only when enabled)
   if (enabled) {
     fill("#1A0F22"); // Ink-900 dark shadow
     noStroke();
-    rect(btnX + 4, y + 4, confirmBtnWidth, h, 999);
+    rect(bx + 4, y + 4, bw, h, h / 2);
   }
   
   // Main button
@@ -1246,14 +1314,14 @@ function drawConfirmButton(x, y, w, h, label, hot, enabled) {
   } else {
     fill("#ECE5EE"); // Ink-100 disabled
   }
-  rect(btnX, y, confirmBtnWidth, h, 999); // pill shape
+  rect(bx, y, bw, h, h / 2); // pill shape
   
   // Text
   fill(enabled ? 255 : "#B5AAB8");
   textSize(17);
   textStyle(BOLD);
   textAlign(CENTER, CENTER);
-  text(label, confirmX, y + h / 2);
+  text(label, bx + bw / 2, y + h / 2);
   textStyle(NORMAL);
 }
 
