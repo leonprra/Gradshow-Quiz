@@ -221,7 +221,7 @@ function draw() {
   btnH = max(44, min(60, height * 0.082));
   btnGap = max(8, min(14, height * 0.02));
 
-  background("#FFFFFF"); // Cream background
+  background("#FAF6F0"); // Cream background
 
   const dotSpacing = 24;
   noStroke();
@@ -861,46 +861,24 @@ function handleTap(px, py) {
   }
 
   if (appState === "quiz") {
-    // Match the exact layout from drawQuestionScreen
-    const SPACE_SM = 12;
     const q = QUESTIONS[currentIdx];
     if (!q) return;
     
-    // Confirm at bottom
-    const confirmY = height - pad - btnH;
+    const L = getQuizLayout(q);
+    const choice0X = L.isLandscape ? L.rightX : L.cx;
+    const choice0W = L.isLandscape ? L.rightW : L.cw;
     
-    // Recalculate prompt height
-    const promptY = pad + 32;
-    const promptSize = constrain(floor(cw / 19), 14, 18);
-    textSize(promptSize);
-    const promptLines = wrapText(q.prompt, cw);
-    const promptLineHeight = promptSize * 1.3;
-    const promptHeight = promptLines.length * promptLineHeight;
-    
-    // Image position (square)
-    const imgTop = promptY + promptHeight + SPACE_SM;
-    const imgH = cw;
-    const imgBottom = imgTop + imgH;
-    
-    // Choice heights based on text content
-    const choice0H = getChoiceButtonHeight(q.choices[0], cw);
-    const choice1H = getChoiceButtonHeight(q.choices[1], cw);
-    
-    const choice0Y = imgBottom + SPACE_SM;
-    const choice1Y = choice0Y + choice0H + SPACE_SM;
-
-    if (hit(px, py, cx, choice0Y, cw, choice0H)) {
+    if (hit(px, py, choice0X, L.choice0Y, choice0W, L.choice0H)) {
       selectedChoice = 0;
       return;
     }
     
-    if (hit(px, py, cx, choice1Y, cw, choice1H)) {
+    if (hit(px, py, choice0X, L.choice1Y, choice0W, L.choice1H)) {
       selectedChoice = 1;
       return;
     }
     
-    // Confirm button (full content width)
-    if (hit(px, py, cx, confirmY, cw, btnH)) {
+    if (hit(px, py, L.confirmX, L.confirmY, L.confirmW, btnH)) {
       if (selectedChoice !== null) {
         answerQuestion(selectedChoice);
       }
@@ -1135,93 +1113,155 @@ function getCharacter() {
 
 /* ---------------- DRAWING HELPERS ---------------- */
 
-function drawQuestionScreen(q) {
+// Calculate quiz layout positions (used by both draw and hit detection so they stay in sync)
+function getQuizLayout(q) {
   const cw = contentWidth();
   const cx = contentX();
+  const SPACE_SM = 12;
+  const SPACE_LG = 24;
+  const isLandscape = width > height;
+  
+  if (isLandscape) {
+    // ===== DESKTOP LANDSCAPE: 60/40 split =====
+    const colGap = 24;
+    const stageW = min(width - pad * 2, 1100); // cap total width
+    const stageX = (width - stageW) / 2;
+    
+    const leftW = (stageW - colGap) * 0.60;
+    const rightW = (stageW - colGap) * 0.40;
+    const leftX = stageX;
+    const rightX = stageX + leftW + colGap;
+    
+    // Left column: prompt at top, image fills remainder
+    const promptY = pad + 32;
+    const promptSize = constrain(floor(leftW / 22), 14, 19);
+    textSize(promptSize);
+    const promptLines = wrapText(q.prompt, leftW);
+    const promptLineHeight = promptSize * 1.3;
+    const promptHeight = promptLines.length * promptLineHeight;
+    
+    const imgTop = promptY + promptHeight + SPACE_SM;
+    const imgBottom = height - pad;
+    const imgAvailableH = imgBottom - imgTop;
+    
+    // Right column: choices at top, confirm at bottom
+    const choice0H = getChoiceButtonHeight(q.choices[0], rightW + 40);
+    const choice1H = getChoiceButtonHeight(q.choices[1], rightW + 40);
+    const rightTopY = pad + 32; // align with left column start
+    const choice0Y = rightTopY;
+    const choice1Y = choice0Y + choice0H + SPACE_SM;
+    const confirmY = height - pad - btnH;
+    
+    return {
+      isLandscape: true,
+      cw, cx, leftX, leftW, rightX, rightW,
+      promptY, promptSize, promptHeight,
+      imgTop, imgX: leftX, imgW: leftW, imgH: imgAvailableH,
+      choice0Y, choice0H, choice1Y, choice1H,
+      confirmY, confirmX: rightX, confirmW: rightW
+    };
+  } else {
+    // ===== MOBILE PORTRAIT: vertical stack =====
+    const promptY = pad + 32;
+    const promptSize = constrain(floor(cw / 19), 14, 18);
+    textSize(promptSize);
+    const promptLines = wrapText(q.prompt, cw);
+    const promptLineHeight = promptSize * 1.3;
+    const promptHeight = promptLines.length * promptLineHeight;
+    
+    // Square image, capped at 40% screen height
+    const imgTop = promptY + promptHeight + SPACE_SM;
+    const imgSize = min(cw, height * 0.40);
+    const imgX = cx + (cw - imgSize) / 2;
+    const imgBottom = imgTop + imgSize;
+    
+    const choice0H = getChoiceButtonHeight(q.choices[0], cw);
+    const choice1H = getChoiceButtonHeight(q.choices[1], cw);
+    const choice0Y = imgBottom + SPACE_SM;
+    const choice1Y = choice0Y + choice0H + SPACE_SM;
+    
+    const confirmY = height - pad - btnH;
+    
+    return {
+      isLandscape: false,
+      cw, cx,
+      promptY, promptSize, promptHeight,
+      imgTop, imgX, imgW: imgSize, imgH: imgSize,
+      choice0Y, choice0H, choice1Y, choice1H,
+      confirmY, confirmX: cx, confirmW: cw
+    };
+  }
+}
 
+function drawQuestionScreen(q) {
   push();
   translate(width / 2, height / 2);
   scale(questionScale);
   translate(-width / 2, -height / 2);
 
-  // SPACING SYSTEM
-  const SPACE_SM = 12; // tight: prompt↔image, image↔choices, choice↔choice
-  const SPACE_LG = 24; // loose: minimum gap above confirm
-
-  // ---------- TOP: counter + prompt ----------
-  // Question counter
+  const L = getQuizLayout(q);
+  
+  // ---------- DRAW COUNTER ----------
   const qNum = String(currentIdx + 1).padStart(2, '0');
   const qTotal = String(QUESTIONS.length).padStart(2, '0');
   textSize(13);
-  fill(107, 90, 115, questionAlpha); // Text muted
+  fill(107, 90, 115, questionAlpha);
   textStyle(NORMAL);
-  textAlign(CENTER, CENTER);
-  text(`Question ${qNum} of ${qTotal}`, width / 2, pad + 12);
-
-  // Prompt
-  fill(26, 15, 34, questionAlpha); // Ink-900
+  textAlign(L.isLandscape ? LEFT : CENTER, CENTER);
+  
+  if (L.isLandscape) {
+    text(`Question ${qNum} of ${qTotal}`, L.leftX, pad + 12);
+  } else {
+    text(`Question ${qNum} of ${qTotal}`, width / 2, pad + 12);
+  }
+  
+  // ---------- DRAW PROMPT ----------
+  fill(26, 15, 34, questionAlpha);
   textStyle(BOLD);
-  const promptSize = constrain(floor(contentWidth() / 19), 14, 18);
-  textSize(promptSize);
+  textSize(L.promptSize);
   textWrap(WORD);
-  textAlign(CENTER, TOP);
-  const promptY = pad + 32;
-  text(q.prompt, cx, promptY, cw);
+  
+  if (L.isLandscape) {
+    textAlign(LEFT, TOP);
+    text(q.prompt, L.leftX, L.promptY, L.leftW);
+  } else {
+    textAlign(CENTER, TOP);
+    text(q.prompt, L.cx, L.promptY, L.cw);
+  }
   textStyle(NORMAL);
-  
-  // Calculate prompt height (so image starts right below it)
-  const promptLines = wrapText(q.prompt, cw);
-  textSize(promptSize);
-  const promptLineHeight = promptSize * 1.3;
-  const promptHeight = promptLines.length * promptLineHeight;
-
-  // ---------- BOTTOM: confirm button (anchored) ----------
-  const confirmY = height - pad - btnH;
-
-  // ---------- CHOICES: heights based on text content ----------
-  const choice0H = getChoiceButtonHeight(q.choices[0], cw);
-  const choice1H = getChoiceButtonHeight(q.choices[1], cw);
-  
-  // Position choices stacked, with the second choice ending SPACE_LG above confirm
-  // But the choices should be placed so they flow naturally from the image
-  // So: image position determines where they go (flex space sits between choices and confirm)
-  
-  // ---------- IMAGE: square, top-anchored below prompt ----------
-  const imgTop = promptY + promptHeight + SPACE_SM;
-  const imgW = cw;
-  const imgH = imgW; // SQUARE
-  const imgBottom = imgTop + imgH;
-  
-  // ---------- CHOICES position: directly below image with SPACE_SM gap ----------
-  const choice0Y = imgBottom + SPACE_SM;
-  const choice1Y = choice0Y + choice0H + SPACE_SM;
-  const choicesBottom = choice1Y + choice1H;
-  
-  // Sanity check: ensure space between choices bottom and confirm respects SPACE_LG minimum
-  // If choices push too low, we'd have overlap. In that case, we'd need to shrink the image.
-  // For now, we trust the design space.
   
   // ---------- DRAW IMAGE ----------
   push();
   tint(255, questionAlpha);
-  drawMediaFrame(q.imgId, cx, imgTop, imgW, imgH);
+  drawMediaFrame(q.imgId, L.imgX, L.imgTop, L.imgW, L.imgH);
   pop();
   
   // ---------- DRAW CHOICES ----------
   const isSelected0 = selectedChoice === 0;
   const isSelected1 = selectedChoice === 1;
   
-  drawChoiceButton(cx, choice0Y, cw, choice0H, q.choices[0], 
-    isTouching(cx, choice0Y, cw, choice0H), isSelected0, questionAlpha);
-  drawChoiceButton(cx, choice1Y, cw, choice1H, q.choices[1], 
-    isTouching(cx, choice1Y, cw, choice1H), isSelected1, questionAlpha);
+  // For landscape, choice buttons live in right column → use rightX/rightW
+  // For portrait, choice buttons span content width → use cx/cw
+  // drawChoiceButton expects (x, y, w, h) where x is content frame; the button itself draws inside with 20px inset
+  // So in landscape we pass (rightX - 20, y, rightW + 40, h) to effectively give the right column as the inset target
+  const choiceFrameX = L.isLandscape ? (L.rightX - 20) : L.cx;
+  const choiceFrameW = L.isLandscape ? (L.rightW + 40) : L.cw;
+  
+  drawChoiceButton(choiceFrameX, L.choice0Y, choiceFrameW, L.choice0H, q.choices[0],
+    isTouching(L.rightX || L.cx, L.choice0Y, L.rightW || L.cw, L.choice0H),
+    isSelected0, questionAlpha);
+  drawChoiceButton(choiceFrameX, L.choice1Y, choiceFrameW, L.choice1H, q.choices[1],
+    isTouching(L.rightX || L.cx, L.choice1Y, L.rightW || L.cw, L.choice1H),
+    isSelected1, questionAlpha);
   
   pop();
 
-  // ---------- DRAW CONFIRM (full width like choices) ----------
+  // ---------- DRAW CONFIRM ----------
   const canConfirm = selectedChoice !== null;
-  drawConfirmButton(cx, confirmY, cw, btnH, "Confirm  →", 
-    isTouching(cx, confirmY, cw, btnH), canConfirm);
+  const confirmFrameX = L.isLandscape ? (L.confirmX - 20) : L.confirmX;
+  const confirmFrameW = L.isLandscape ? (L.confirmW + 40) : L.confirmW;
+  drawConfirmButton(confirmFrameX, L.confirmY, confirmFrameW, btnH, "Confirm  →",
+    isTouching(L.confirmX, L.confirmY, L.confirmW, btnH), canConfirm);
 }
 
 function drawMediaFrame(imgId, x, y, w, h) {
