@@ -221,7 +221,7 @@ function draw() {
   btnH = max(44, min(60, height * 0.082));
   btnGap = max(8, min(14, height * 0.02));
 
-  background("#FAF6F0"); // Cream background
+  background("#FFFFFF"); // Cream background
 
   const dotSpacing = 24;
   noStroke();
@@ -1144,13 +1144,20 @@ function getQuizLayout(q) {
     const imgBottom = height - pad;
     const imgAvailableH = imgBottom - imgTop;
     
-    // Right column: choices at top, confirm at bottom
+    // Right column: choices vertically centered, confirm at bottom
     const choice0H = getChoiceButtonHeight(q.choices[0], rightW + 40);
     const choice1H = getChoiceButtonHeight(q.choices[1], rightW + 40);
-    const rightTopY = pad + 32; // align with left column start
-    const choice0Y = rightTopY;
-    const choice1Y = choice0Y + choice0H + SPACE_SM;
     const confirmY = height - pad - btnH;
+    
+    // Calculate the available vertical space for choices (from top pad to above confirm)
+    const choicesAvailableTop = pad + 32; // top of right column
+    const choicesAvailableBottom = confirmY - SPACE_LG; // leave breathing room above confirm
+    const choicesAvailableH = choicesAvailableBottom - choicesAvailableTop;
+    const choicesTotalH = choice0H + SPACE_SM + choice1H;
+    
+    // Center the choices block within available vertical space
+    const choice0Y = choicesAvailableTop + (choicesAvailableH - choicesTotalH) / 2;
+    const choice1Y = choice0Y + choice0H + SPACE_SM;
     
     return {
       isLandscape: true,
